@@ -1,0 +1,86 @@
+.super-title {
+  p {
+    font-size: 15vh;
+  }
+  ion-row {
+    width: 100%;
+    p {
+      margin-top: 3rem;
+      margin-bottom: 3rem;
+    }
+  }
+}
+
+.medium-title {
+  p {
+    font-size: 3rem;
+  }
+  ion-row {
+    width: 100%;
+    p {
+      margin-top: 3rem;
+      margin-bottom: 3rem;
+    }
+  }
+}
+
+.small-title {
+  p, ion-label {
+    font-size: 1.5rem !important;
+  }
+}
+
+.success {
+  color: var(--ion-color-success);
+}
+
+ion-spinner {
+  width: 5rem;
+  height: 5rem;
+  color: var(--ion-color-success);
+}
+
+ion-range {
+  height: 4rem;
+  padding-top: 2rem !important;
+}
+
+.color-danger {
+  color: var(--ion-color-danger);
+}
+
+.color-success {
+  color: var(--ion-color-success);
+}
+
+.color-secondary {
+  color: var(--ion-color-secondary);
+}
+
+.color-primary {
+  color: var(--ion-color-primary);
+}
+
+ion-header {
+  ion-toolbar {
+    ion-icon {
+      font-size: 2rem;
+    } 
+  }
+}
+
+ion-content {
+  background-color: var(--ion-color-secondary);
+}
+
+ion-list {
+  background-color: var(--ion-color-secondary) !important;
+}
+
+ion-item {
+  --background: var(--ion-color-secondary) !important;
+}
+
+ion-button {
+  text-transform: initial;
+}

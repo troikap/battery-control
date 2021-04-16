@@ -1,0 +1,7 @@
+{
+  "name": "battery-control",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}

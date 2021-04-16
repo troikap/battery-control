@@ -1,0 +1,79 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color=primary>
+    <ion-button slot="start" color="secondary" fill="clear">
+      <ion-icon name="battery-charging"></ion-icon>
+    </ion-button>
+    <ion-title>Bateria</ion-title>
+    <ion-buttons slot="end" (click)="activateAlarm()">
+      <ion-button color="secondary" fill="outline">
+        <ion-label *ngIf="!activatedAlarm">Desactivado</ion-label>
+        <ion-label *ngIf="activatedAlarm">Activado</ion-label>
+        <ion-icon name="volume-mute" *ngIf="!activatedAlarm"></ion-icon>
+        <ion-icon name="volume-high" *ngIf="activatedAlarm"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" color="secondary">
+  <div class="ion-text-center ion-padding-top small-title" *ngIf="nivel">
+    <p class="ion-no-margin">
+     <span class="color-danger">{{nivel.lower}} %</span> - <span class="color-success">{{nivel.upper}} %</span>
+    </p>
+  </div>
+  <ion-list>
+    <ion-item>
+      <ion-range class="ion-no-padding" dualKnobs="true" min="0" max="100" step="1" snaps="true" pin="true" [(ngModel)]="nivel" (ionChange)="onChangeNivel()"></ion-range>
+    </ion-item>
+  </ion-list>
+  <div *ngIf="currentBatteryStatus && nivel">
+    <ion-item class='medium-title ion-text-center' lines=none>
+      <ion-row>
+        <ion-col>
+          <p [ngClass]="{'success': currentBatteryStatus.isPlugged}"><strong>
+              {{currentBatteryStatus.isPlugged ? 'Conectado' : 'Desconectado'}}
+            </strong>
+          </p>
+        </ion-col>
+      </ion-row>
+    </ion-item>
+    <ion-row>
+      <ion-col>
+        <ion-item *ngIf="currentBatteryStatus.level <= nivel.lower && !currentBatteryStatus.isPlugged" color='warning' class="small-title">
+          <ion-label class="ion-text-center">
+            Por favor conecte su telefono
+          </ion-label>
+        </ion-item>
+        <ion-item *ngIf="currentBatteryStatus.level >= nivel.upper && currentBatteryStatus.isPlugged" color='warning' class="small-title">
+          <ion-label class="ion-text-center">
+            Por favor desconecte su telefono
+          </ion-label>
+        </ion-item>
+      </ion-col>
+    </ion-row>
+    <ion-item class='super-title ion-text-center' lines=none>
+      <ion-row>
+        <ion-col>
+          <ion-spinner pin="true" name="crescent"></ion-spinner>
+          <p><strong>
+              {{currentBatteryStatus.level}}%
+            </strong>
+          </p>
+        </ion-col>
+      </ion-row>
+    </ion-item>
+  </div>
+  <div>
+    <!-- <audio [src]="sound.value" id="player"></audio> -->
+    <audio [src]="sound.value" id='player'></audio>
+    
+  </div>
+  <ion-button expand=full (click)="loadPlayer()" *ngIf="isActivatedSound">
+    Parar sonido
+  </ion-button>
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed" (click)="onClickSound()">
+    <ion-fab-button>
+      <ion-icon name="musical-notes"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>
