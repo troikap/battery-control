@@ -8,13 +8,16 @@ import { Battery } from '../models/battery.model';
 export class BatteryProvider {
   private batteryStatusChange;
   private lastStatusBattery: Battery;
-  private nivel: {lower: number, upper: number} = {lower: 20, upper: 80};
 
   constructor(
     private batteryStatus: BatteryStatus,
   ) {
     this.createBatteryStatusChange();
-   }
+  }
+
+  getBatteryStatus() {
+    return this.batteryStatus;
+  }
 
   getBatteryStatusChange() {
     return this.batteryStatusChange;
@@ -22,14 +25,6 @@ export class BatteryProvider {
 
   private createBatteryStatusChange() {
     this.batteryStatusChange = this.batteryStatus.onChange();
-  }
-
-  setNivel(nivel: {lower: number, upper: number}) {
-    this.nivel = nivel;
-  }
-
-  getNivel() {
-    return this.nivel;
   }
 
   setStatusBattery( statusBattery: Battery) {

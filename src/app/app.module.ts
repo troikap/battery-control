@@ -8,6 +8,10 @@ import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
 import { BatteryStatus } from '@ionic-native/battery-status/ngx';
 import { ComponentesModule } from './pages/modals/componentes.module';
+import { BackgroundMode } from '@ionic-native/background-mode/ngx';
+import { StatusBar } from '@ionic-native/status-bar/ngx';
+import { AudioManagement } from '@ionic-native/audio-management/ngx';
+import { Vibration } from '@ionic-native/vibration/ngx';
 
 @NgModule({
   declarations: [AppComponent],
@@ -21,6 +25,10 @@ import { ComponentesModule } from './pages/modals/componentes.module';
   providers: [
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
     BatteryStatus,
+    BackgroundMode,
+    StatusBar,
+    AudioManagement,
+    Vibration
   ],
   bootstrap: [AppComponent],
 })

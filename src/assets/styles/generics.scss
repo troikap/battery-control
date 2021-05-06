@@ -43,6 +43,13 @@ ion-spinner {
 ion-range {
   height: 4rem;
   padding-top: 2rem !important;
+  &.range-rotate {
+    right: 0;
+    position: absolute;
+    top: 20rem;
+    z-index: 9999999999999;
+    width: 15rem;
+  }
 }
 
 .color-danger {
@@ -83,4 +90,28 @@ ion-item {
 
 ion-button {
   text-transform: initial;
+}
+
+ion-fab {
+  &.fab-sound {
+    ion-fab-list {
+      ion-fab-button {
+        margin-top: -1rem;
+        width: 14rem;
+        --border-radius: 5px;
+        --background: var(--ion-color-secondary);
+        height: 4rem;
+        ion-range {
+          padding-top: 3rem;
+        }
+        p {
+          position: absolute;
+          font-size: 2rem;
+          margin: 0;
+          padding: 0;
+          top: 0.4rem;
+        }
+      }
+    }
+  }
 }

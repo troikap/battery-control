@@ -17,8 +17,9 @@ export class ConfigHelper {
     {id: 10, value: "assets/sounds/sonido-10.mp3"},
     {id: 11, value: "assets/sounds/sonido-11.mp3"},
   ]
-  private soundSelected = {id: 1, value: "assets/sounds/sonido-1.mp3"};
-  private isActivatedAlarm = false;
+  private soundSelected = {id: 1, value: "assets/sounds/sonido-9.mp3"};
+  private isActivatedAlarm = true;
+  private nivel: {lower: number, upper: number} = {lower: 20, upper: 80};
 
   constructor() { }
 
@@ -40,5 +41,13 @@ export class ConfigHelper {
 
   public setIsActivatedAlarm(value: boolean) {
     this.isActivatedAlarm = value;
+  }
+
+  public setNivel(nivel: {lower: number, upper: number}) {
+    this.nivel = nivel;
+  }
+
+  public getNivel() {
+    return this.nivel;
   }
 }

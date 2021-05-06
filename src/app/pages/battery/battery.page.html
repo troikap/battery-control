@@ -66,7 +66,6 @@
   <div>
     <!-- <audio [src]="sound.value" id="player"></audio> -->
     <audio [src]="sound.value" id='player'></audio>
-    
   </div>
   <ion-button expand=full (click)="loadPlayer()" *ngIf="isActivatedSound">
     Parar sonido
@@ -76,4 +75,23 @@
       <ion-icon name="musical-notes"></ion-icon>
     </ion-fab-button>
   </ion-fab>
+
+  <ion-fab vertical="bottom" horizontal="start" slot="fixed" class="fab-sound" *ngIf="activatedAlarm">
+    <ion-fab-button>
+      <ion-icon name="volume-high"></ion-icon>
+    </ion-fab-button>
+    <ion-fab-list side="end">
+      <ion-fab-button>
+        <p>{{promLevelSound}} %</p>
+        <ion-range class="ion-padding ion-margin-horizontal" min="0" [max]="maxLevelSound" step="1" snaps="true" pin="true" [(ngModel)]="levelSound" (ionChange)="setConfigAudio()"></ion-range>
+      </ion-fab-button>
+    </ion-fab-list>
+  </ion-fab>
+
 </ion-content>
+
+<ion-footer>
+  <ion-button (click)="setNotificationAdvance()">
+    setNotification
+  </ion-button>
+</ion-footer>
