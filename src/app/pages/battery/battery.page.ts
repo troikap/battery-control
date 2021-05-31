@@ -21,6 +21,7 @@ export class BatteryPage implements OnInit {
   public batteryStatusChange;
   public currentBatteryStatus: Battery;
   public myPlayer: any;
+  public myPlayerTest: any;
   public nivel: {lower: number, upper: number};
   public isActivatedSound;
   public activatedAlarm;
@@ -29,6 +30,7 @@ export class BatteryPage implements OnInit {
   public levelSound = 0;
   public maxLevelSound = 15;
   public promLevelSound = 0;
+  private intervalPlayerTest;
 
   constructor(
     private changeDetectorRef: ChangeDetectorRef,
@@ -49,13 +51,43 @@ export class BatteryPage implements OnInit {
   
   ngOnInit() {
     console.log('ngOnInit BatteryPage')
-    this.onStartBateryControl();
     this.myPlayer = document.getElementById('player');
+    this.myPlayerTest = document.getElementById('sound-test');
+  }
+
+  initTask() {
+    this.onStartBateryControl();
     this.changeDetectorRef.detectChanges();
     this.setConfigLevelSound();
     this.registerLocalNotification();
+    this.initIntervalPlayerTest();
   }
 
+  initIntervalPlayerTest() {
+    this.intervalPlayerTest = setInterval( async () => {
+      try {
+        if (!this.myPlayerTest) {
+          console.log('NO SE ENCONTRO EL AUDIO')
+          this.toastHelper.presentToast('No se encontro el audio - myPlayerTest', 1500, 'danger');
+          return;
+        }
+        await this.myPlayerTest.play();
+        setTimeout( async () => {
+          await this.myPlayerTest.load();
+        }, 3000);
+        window.navigator.vibrate(0) && window.navigator.vibrate([2000,500,1000]);
+        // this.vibration && this.vibration.vibrate([2000,1000,2000]);
+      } catch (err) {
+        console.log('Problemas al resolver initIntervalPlayerTest ', err);
+      }
+    }, 5000);
+  }
+
+  stopSoundTest() {
+    clearInterval(this.intervalPlayerTest);
+    this.intervalPlayerTest = null;
+    this.toastHelper.presentToast('Intervalo myPlayerTest parado', 1500, 'success');
+  }
 
   async registerLocalNotification() {
     await LocalNotifications.requestPermission();
@@ -120,8 +152,6 @@ export class BatteryPage implements OnInit {
     });
   }
 
-  
-
   async setConfigLevelSound() {
     try {
       const maxVolumen = await this.audioManagement.getMaxVolume(AudioManagement.VolumeType.MUSIC);
@@ -166,11 +196,11 @@ export class BatteryPage implements OnInit {
       this.toastHelper.presentToast('No se encontro el audio - playPlayer', 1500, 'danger');
       return;
     }
-    console.log('aaa ',this.myPlayer)
     if (!this.activatedAlarm) { return; }
     this.isActivatedSound = true;
     this.myPlayer.play();
-    this.vibration.vibrate([2000,1000,2000,2000,1000,2000,2000,1000,2000,2000,1000,2000]);
+    window.navigator.vibrate(0) && window.navigator.vibrate([2000,500,1000]);
+    // this.vibration && this.vibration.vibrate([2000,1000,2000,2000,1000,2000,2000,1000,2000,2000,1000,2000]);
     this.setNotification(msj);
     this.changeDetectorRef.detectChanges();
   }
@@ -182,7 +212,8 @@ export class BatteryPage implements OnInit {
     }
     this.isActivatedSound = false;
     this.myPlayer.load();
-    this.vibration.vibrate(0);
+    window.navigator.vibrate(0);
+    // this.vibration && this.vibration.vibrate(0);
     this.changeDetectorRef.detectChanges();
   }
 
@@ -219,23 +250,20 @@ export class BatteryPage implements OnInit {
     });
   }
 
-  onClickGetVolumen() {
+  async onClickGetVolumen() {
     console.log('Get volumen ')
-    this.audioManagement.getAudioMode()
-      .then((value: AudioManagement.AudioModeReturn) => {
-        console.log('getAudioMode Device audio mode is ' + value.label + ' (' + value.audioMode + ') ');
-      })
-      .catch((reason) => {
-        console.log('CATCH - onClickGetVolumen ', reason);
-    });
-    
-    this.audioManagement.getVolume(AudioManagement.VolumeType.MUSIC )
-    .then( resp => {
-      console.log('getVolume MUSIC  Device audio mode is ' + resp.volume);
-    })  
-    .catch((reason) => {
-      console.log('CATCH - getVolume MUSIC  ', reason);
-    })
+    try {
+      const value: AudioManagement.AudioModeReturn = await this.audioManagement.getAudioMode()
+      console.log('getAudioMode Device audio mode is ' + value.label + ' (' + value.audioMode + ') ');
+    } catch (err) {
+      console.log('CATCH - onClickGetVolumen ', err);
+    }
+    try {
+      const value = await this.audioManagement.getVolume(AudioManagement.VolumeType.MUSIC )
+      console.log('getVolume MUSIC  Device audio mode is ' + value.volume);
+    } catch (err) {
+      console.log('CATCH - getVolume MUSIC  ', err);
+    }
   }
 
   async setConfigAudio() {

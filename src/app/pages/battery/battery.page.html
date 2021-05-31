@@ -67,6 +67,9 @@
     <!-- <audio [src]="sound.value" id="player"></audio> -->
     <audio [src]="sound.value" id='player'></audio>
   </div>
+  <div>
+    <audio src="assets/sounds/sonido-1.mp3" id='sound-test'></audio>
+  </div>
   <ion-button expand=full (click)="loadPlayer()" *ngIf="isActivatedSound">
     Parar sonido
   </ion-button>
@@ -94,4 +97,14 @@
   <ion-button (click)="setNotificationAdvance()">
     setNotification
   </ion-button>
+  <ion-button *ngIf="intervalPlayerTest" (click)="stopSoundTest()">
+    Parar test
+  </ion-button>
+  <ion-button *ngIf="!intervalPlayerTest" (click)="initIntervalPlayerTest()">
+    Iniciar test
+  </ion-button>
+  <ion-button *ngIf="intervalPlayerTest" (click)="cleanPlayerTest()">
+    cleanPlayerTest
+  </ion-button>
+  
 </ion-footer>
