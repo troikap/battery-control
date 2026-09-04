@@ -1,0 +1,41 @@
+<ion-header>
+  <ion-toolbar color=primary>
+    <ion-button slot="start" color="secondary" fill="clear">
+      <ion-icon name="musical-notes"></ion-icon>
+    </ion-button>
+    <ion-title>Sonidos</ion-title>
+    <ion-buttons slot="end" (click)="loadPlayer()">
+      <ion-button color="secondary" fill="clear">
+        <ion-icon name="stop-circle"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content color="secondary">
+  <ion-row *ngIf="sounds">
+    <ion-col>
+      <ion-list okText="Aceptar" cancelText="Cancelar">
+        <ion-item *ngFor="let sound of sounds" (click)="onClickSound(sound)">
+          <ion-label class="ion-text-center">
+            {{sound.id}} - {{sound.value}}
+          </ion-label>
+          <ion-button (click)="presentAlertConfirm()">
+            Seleccionar
+          </ion-button>
+        </ion-item>
+      </ion-list>
+    </ion-col>
+  </ion-row>
+  <div>
+    <audio [src]="soundSelected.value" id='player-modal'></audio>
+  </div>
+</ion-content>
+
+<ion-footer color="primary">
+  <ion-toolbar>
+    <ion-button (click)="onClickCancel()" expand="full" size="large">
+      Cancelar
+    </ion-button>
+  </ion-toolbar>
+</ion-footer>

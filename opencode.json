@@ -1,0 +1,73 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": ["AGENTS.md"],
+  "references": {
+    "ionic-docs": {
+      "path": "https://ionicframework.com/docs",
+      "description": "Documentación oficial de Ionic"
+    },
+    "capacitor-docs": {
+      "path": "https://capacitorjs.com/docs",
+      "description": "Documentación de Capacitor"
+    }
+  },
+  "agent": {
+    "architect": {
+      "description": "Arquitecto de software para diseño de sistema y patrones",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-6"
+    },
+    "frontend-dev": {
+      "description": "Desarrollador Angular/Ionic para desarrollo de UI",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-6"
+    },
+    "backend-dev": {
+      "description": "Desarrollador de servicios y lógica de negocio",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-6"
+    },
+    "ui-designer": {
+      "description": "Diseñador de interfaces y experiencia de usuario",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-6"
+    },
+    "qa-engineer": {
+      "description": "Ingeniero de calidad y testing",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-6"
+    },
+    "tech-lead": {
+      "description": "Líder técnico para revisión y aprobación de cambios",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-6"
+    },
+    "orchestrator": {
+      "description": "Orquestador que coordina tareas entre agentes especializados",
+      "mode": "primary",
+      "model": "anthropic/claude-sonnet-4-6",
+      "permission": { "edit": "allow", "bash": "ask" }
+    }
+  },
+  "command": {
+    "build-android": {
+      "description": "Build completo para Android con Capacitor",
+      "template": "Ejecuta el build de producción y sincroniza con Capacitor:\n\n```bash\nng build --configuration production\nnpx cap sync android\n```\n\nNotas:\n- Verificar que www/ se genera correctamente\n- Los plugins nativos requieren device/emulator"
+    },
+    "run-tests": {
+      "description": "Ejecutar tests unitarios del proyecto",
+      "template": "Ejecuta todos los tests unitarios:\n\n```bash\nng test --watch=false --browsers=ChromeHeadless\n```\n\nNotas:\n- Requiere Chrome instalado\n- Coverage disponible con ng test --code-coverage"
+    },
+    "lint-fix": {
+      "description": "Ejecutar lint con auto-fix",
+      "template": "Ejecuta linter con corrección automática:\n\n```bash\nng lint --fix\n```\n\nNotas:\n- Revisa cambios antes de commit\n- Configurado con TSLint + Codelyzer"
+    },
+    "serve-dev": {
+      "description": "Iniciar servidor de desarrollo",
+      "template": "Inicia el servidor de desarrollo de Ionic:\n\n```bash\nionic serve\n```\n\nNotas:\n- Puerto por defecto: 8100\n- Hot reload habilitado"
+    }
+  },
+  "skills": {
+    "paths": [".opencode/skills"]
+  }
+}
