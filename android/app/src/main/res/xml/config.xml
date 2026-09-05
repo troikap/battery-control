@@ -9,6 +9,10 @@
     <param name="android-package" value="de.appplant.cordova.plugin.background.BackgroundModeExt"/>
   </feature>
 
+  <feature name="Battery">
+    <param name="android-package" value="org.apache.cordova.batterystatus.BatteryListener"/>
+  </feature>
+
   <feature name="Device">
     <param name="android-package" value="org.apache.cordova.device.Device"/>
   </feature>

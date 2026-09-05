@@ -6,16 +6,6 @@ import { IonicRouteStrategy } from '@ionic/angular/common';
 import { provideIonicAngular } from '@ionic/angular';
 import {
   IonApp,
-  IonSplitPane,
-  IonMenu,
-  IonContent,
-  IonList,
-  IonListHeader,
-  IonNote,
-  IonMenuToggle,
-  IonItem,
-  IonIcon,
-  IonLabel,
   IonRouterOutlet,
 } from '@ionic/angular';
 
@@ -30,16 +20,6 @@ import { ComponentesModule } from './pages/modals/componentes.module';
     AppRoutingModule,
     ComponentesModule,
     IonApp,
-    IonSplitPane,
-    IonMenu,
-    IonContent,
-    IonList,
-    IonListHeader,
-    IonNote,
-    IonMenuToggle,
-    IonItem,
-    IonIcon,
-    IonLabel,
     IonRouterOutlet,
   ],
   providers: [

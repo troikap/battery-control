@@ -6,10 +6,10 @@
     <ion-title>Bateria</ion-title>
     <ion-buttons slot="end" (click)="activateAlarm()">
       <ion-button fill="outline">
-        <ion-label *ngIf="!activatedAlarm">Desactivado</ion-label>
-        <ion-label *ngIf="activatedAlarm">Activado</ion-label>
-        <ion-icon name="volume-mute" *ngIf="!activatedAlarm"></ion-icon>
-        <ion-icon name="volume-high" *ngIf="activatedAlarm"></ion-icon>
+        <ion-label *ngIf="!activatedAlarm">Activar</ion-label>
+        <ion-label *ngIf="activatedAlarm">Desactivar</ion-label>
+        <ion-icon name="volume-high" *ngIf="!activatedAlarm"></ion-icon>
+        <ion-icon name="volume-mute" *ngIf="activatedAlarm"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>

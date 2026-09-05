@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit, OnDestroy } from '@angular/core';
+import { ChangeDetectorRef, Component, NgZone, OnInit, OnDestroy } from '@angular/core';
 import { ViewWillEnter } from '@ionic/angular';
 import { ModalController } from '@ionic/angular';
 import { LocalNotifications } from '@capacitor/local-notifications';
@@ -25,8 +25,13 @@ export class BatteryPage implements OnInit, OnDestroy, ViewWillEnter {
   public sound: any = { id: 1, value: 'assets/sounds/sonido-1.mp3' };
   public batteryInitialized = false;
 
+  // Stored callback references for proper cleanup
+  private onActivateHandler: Function | null = null;
+  private onDeactivateHandler: Function | null = null;
+
   constructor(
     private changeDetectorRef: ChangeDetectorRef,
+    private zone: NgZone,
     private batteryProvider: BatteryProvider,
     private toastHelper: ToastHelper,
     private modalController: ModalController,
@@ -40,7 +45,15 @@ export class BatteryPage implements OnInit, OnDestroy, ViewWillEnter {
     this.getConfig();
     this.currentBatteryStatus = this.batteryProvider.getStatusBattery();
     this.batteryInitialized = this.batteryProvider.isInitialized();
+
+    // Enable background mode before starting battery monitoring
     this.backgroundModeService.init();
+    this.backgroundModeService.enable();
+    this.backgroundModeService.disableBatteryOptimizations();
+
+    // Listen for app foreground/background transitions
+    this.registerBackgroundModeEvents();
+
     this.initTask();
   }
 
@@ -50,8 +63,9 @@ export class BatteryPage implements OnInit, OnDestroy, ViewWillEnter {
 
   ngOnDestroy() {
     this.cleanUp();
-    // Disable background mode when leaving the page
-    this.backgroundModeService.destroy();
+    this.unregisterBackgroundModeEvents();
+    this.batteryProvider.destroy();
+    this.backgroundModeService.disable();
   }
 
   cleanUp() {
@@ -61,10 +75,50 @@ export class BatteryPage implements OnInit, OnDestroy, ViewWillEnter {
     }
   }
 
+  // -------------------------------------------------------------------------
+  // Background mode lifecycle
+  // -------------------------------------------------------------------------
+
+  /**
+   * Subscribe to cordova-plugin-background-mode events to detect when the app
+   * transitions between foreground and background. On resume the battery status
+   * is force-refreshed so the UI always shows current data.
+   */
+  private registerBackgroundModeEvents(): void {
+    this.onActivateHandler = () => {
+      console.log('[BatteryPage] App entered background');
+    };
+    this.backgroundModeService.on('activate', this.onActivateHandler);
+
+    this.onDeactivateHandler = () => {
+      console.log('[BatteryPage] App resumed from background');
+      this.zone.run(() => {
+        this.batteryProvider.forceRefresh();
+        this.changeDetectorRef.detectChanges();
+      });
+    };
+    this.backgroundModeService.on('deactivate', this.onDeactivateHandler);
+  }
+
+  private unregisterBackgroundModeEvents(): void {
+    if (this.onActivateHandler) {
+      this.backgroundModeService.un('activate', this.onActivateHandler);
+      this.onActivateHandler = null;
+    }
+    if (this.onDeactivateHandler) {
+      this.backgroundModeService.un('deactivate', this.onDeactivateHandler);
+      this.onDeactivateHandler = null;
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Initialisation
+  // -------------------------------------------------------------------------
+
   initTask() {
+    this.registerLocalNotification();
     this.onStartBateryControl();
     this.changeDetectorRef.detectChanges();
-    this.registerLocalNotification();
   }
 
   async registerLocalNotification() {
@@ -75,12 +129,16 @@ export class BatteryPage implements OnInit, OnDestroy, ViewWillEnter {
     }
   }
 
+  // -------------------------------------------------------------------------
+  // Local notifications
+  // -------------------------------------------------------------------------
+
   async setNotification(msj: string) {
     try {
       await LocalNotifications.schedule({
         notifications: [
           {
-            title: "Cuide su bateria",
+            title: 'Cuide su bateria',
             body: msj,
             id: 1,
             extra: {
@@ -99,10 +157,10 @@ export class BatteryPage implements OnInit, OnDestroy, ViewWillEnter {
       await LocalNotifications.schedule({
         notifications: [
           {
-            title: "Cuide su bateria",
+            title: 'Cuide su bateria',
             body: msj,
             id: 2,
-            actionTypeId: "CHAT_MSG",
+            actionTypeId: 'CHAT_MSG',
             extra: {
               data: 'Pasa tu informacion para manejarla'
             },
@@ -116,6 +174,10 @@ export class BatteryPage implements OnInit, OnDestroy, ViewWillEnter {
       console.error('Error scheduling advance notification:', err);
     }
   }
+
+  // -------------------------------------------------------------------------
+  // Config helpers
+  // -------------------------------------------------------------------------
 
   getConfig() {
     this.getSound();
@@ -144,15 +206,39 @@ export class BatteryPage implements OnInit, OnDestroy, ViewWillEnter {
     }
   }
 
+  // -------------------------------------------------------------------------
+  // Audio playback (foreground) + notification (works in background)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Play the alarm sound and fire a local notification.
+   *
+   * HTML5 audio playback is only possible in the foreground; if it fails
+   * (e.g. the app is backgrounded) the LocalNotification will still be
+   * delivered with the configured notification sound from capacitor.config.json.
+   */
   playPlayer(msj?: string) {
-    if (!this.myPlayer) {
-      this.toastHelper.presentToast('No se encontro el audio - playPlayer', 1500, 'danger');
-      return;
-    }
     if (!this.activatedAlarm) { return; }
+
     this.isActivatedSound = true;
-    this.myPlayer.play();
-    window.navigator.vibrate(0) && window.navigator.vibrate([2000,500,1000]);
+
+    // Attempt HTML5 audio — will fail silently in background
+    try {
+      if (this.myPlayer) {
+        const playPromise = this.myPlayer.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+          playPromise.catch(() => {
+            // Audio play blocked (app in background / no user interaction)
+          });
+        }
+      }
+    } catch (e) {
+      // Audio element not available in this context
+    }
+
+    window.navigator.vibrate(0) && window.navigator.vibrate([2000, 500, 1000]);
+
+    // LocalNotification fires even when the app is backgrounded
     this.setNotification(msj ?? 'Batería fuera de rango');
     this.changeDetectorRef.detectChanges();
   }
@@ -163,10 +249,18 @@ export class BatteryPage implements OnInit, OnDestroy, ViewWillEnter {
       return;
     }
     this.isActivatedSound = false;
-    this.myPlayer.load();
+    try {
+      this.myPlayer.load();
+    } catch (e) {
+      // Ignore errors when backgrounded
+    }
     window.navigator.vibrate(0);
     this.changeDetectorRef.detectChanges();
   }
+
+  // -------------------------------------------------------------------------
+  // Battery monitoring
+  // -------------------------------------------------------------------------
 
   onChangeNivel() {
     this.tempChange = setTimeout(() => {
@@ -187,9 +281,12 @@ export class BatteryPage implements OnInit, OnDestroy, ViewWillEnter {
       this.changeDetectorRef.detectChanges();
     });
 
-    this.backgroundModeService.enable();
     this.changeDetectorRef.detectChanges();
   }
+
+  // -------------------------------------------------------------------------
+  // Sound picker modal
+  // -------------------------------------------------------------------------
 
   async onClickSound() {
     const modal = await this.modalController.create({

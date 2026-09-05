@@ -8,10 +8,6 @@ import { StatusBar, Style } from '@capacitor/status-bar';
   standalone: false,
 })
 export class AppComponent {
-  public appPages = [
-    { title: 'Bateria', url: 'battery', icon: 'battery-half' },
-  ];
-  public labels = ['Bateria'];
   constructor() {
     this.initStatusBar();
   }
