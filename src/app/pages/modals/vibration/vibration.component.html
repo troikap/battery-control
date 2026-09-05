@@ -1,0 +1,40 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-button slot="start" fill="clear">
+      <ion-icon name="phone-portrait"></ion-icon>
+    </ion-button>
+    <ion-title>Vibración</ion-title>
+    <ion-buttons slot="end" (click)="stopVibration()">
+      <ion-button fill="clear">
+        <ion-icon name="stop-circle"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-row *ngIf="vibrations">
+    <ion-col>
+      <ion-list>
+        <ion-item *ngFor="let vibration of vibrations" (click)="onClickVibration(vibration)">
+          <ion-icon [name]="vibration.icon" slot="start"></ion-icon>
+          <ion-label>
+            <h2>{{vibration.name}}</h2>
+            <p>{{vibration.description}}</p>
+          </ion-label>
+          <ion-button (click)="presentAlertConfirm()" slot="end">
+            Seleccionar
+          </ion-button>
+        </ion-item>
+      </ion-list>
+    </ion-col>
+  </ion-row>
+</ion-content>
+
+<ion-footer>
+  <ion-toolbar>
+    <ion-button (click)="onClickCancel()" expand="full" size="large">
+      Cancelar
+    </ion-button>
+  </ion-toolbar>
+</ion-footer>

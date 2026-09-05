@@ -12,6 +12,24 @@ ion-footer ion-toolbar {
   --background: #0f172a;
 }
 
+/* Section headers */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 16px 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+}
+
+.section-header ion-icon {
+  font-size: 1.1rem;
+  color: var(--ion-color-primary, #3880ff);
+}
+
 /* Lista de sonidos - limpia sin bordes feos */
 ion-list {
   background: transparent !important;
@@ -28,6 +46,7 @@ ion-item {
   --min-height: 56px;
   border-radius: 8px;
   margin-bottom: 4px;
+  transition: background-color 0.2s ease, border-left-color 0.2s ease;
 }
 
 ion-item ion-label {
@@ -35,11 +54,62 @@ ion-item ion-label {
   font-size: 0.9rem;
 }
 
+ion-item ion-label p {
+  color: #94a3b8;
+  font-size: 0.75rem;
+  margin-top: 2px;
+}
+
+/* Selected state */
+ion-item.selected {
+  --background: rgba(56, 128, 255, 0.1);
+  border-left: 3px solid var(--ion-color-primary, #3880ff);
+  --padding-start: 9px;
+}
+
+ion-item.selected ion-label h2 {
+  color: var(--ion-color-primary, #3880ff);
+  font-weight: 600;
+}
+
+ion-item.selected ion-icon {
+  color: var(--ion-color-primary, #3880ff);
+}
+
 /* Botón Seleccionar - outline limpio */
 ion-item ion-button {
   --border-radius: 6px;
   --padding-start: 12px;
   --padding-end: 12px;
+}
+
+/* Botones de acción en la fila de sonidos importados */
+ion-item ion-buttons ion-button[fill="clear"] {
+  --padding-start: 6px;
+  --padding-end: 6px;
+}
+
+ion-item ion-buttons ion-button[fill="clear"] ion-icon {
+  font-size: 1.1rem;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 32px 24px;
+  color: #64748b;
+}
+
+.empty-state ion-icon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+  color: #475569;
+}
+
+.empty-state p {
+  margin: 4px 0;
+  font-size: 0.85rem;
+  color: #94a3b8;
 }
 
 /* Botón Cancelar del footer */

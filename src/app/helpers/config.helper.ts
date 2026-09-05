@@ -1,5 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Preferences } from '@capacitor/preferences';
+import { VibrationPattern, VIBRATION_PATTERNS, DEFAULT_VIBRATION_PATTERN_ID } from '../models/vibration.model';
+import { SoundOption, ImportedSound } from '../models/sound.model';
+import { SoundImportService } from '../services/sound-import.service';
 
 @Injectable({
   providedIn: 'root'
@@ -9,6 +12,7 @@ export class ConfigHelper {
     SOUND: 'battery_sound',
     ALARM: 'battery_alarm_activated',
     NIVEL: 'battery_nivel',
+    VIBRATION: 'battery_vibration',
   };
 
   private sounds = [
@@ -28,10 +32,11 @@ export class ConfigHelper {
   private soundSelected = {id: 1, value: 'assets/sounds/sonido-1.mp3'};
   private isActivatedAlarm = true;
   private nivel: {lower: number, upper: number} = {lower: 20, upper: 80};
+  private vibrationSelected: VibrationPattern = VIBRATION_PATTERNS.find(v => v.id === DEFAULT_VIBRATION_PATTERN_ID)!;
 
   private loaded = false;
 
-  constructor() {
+  constructor(private soundImportService: SoundImportService) {
     this.loadFromStorage();
   }
 
@@ -60,10 +65,11 @@ export class ConfigHelper {
 
   private async loadFromStorage(): Promise<void> {
     try {
-      const [soundResult, alarmResult, nivelResult] = await Promise.all([
+      const [soundResult, alarmResult, nivelResult, vibrationResult] = await Promise.all([
         Preferences.get({key: ConfigHelper.KEYS.SOUND}),
         Preferences.get({key: ConfigHelper.KEYS.ALARM}),
         Preferences.get({key: ConfigHelper.KEYS.NIVEL}),
+        Preferences.get({key: ConfigHelper.KEYS.VIBRATION}),
       ]);
 
       if (soundResult.value) {
@@ -74,6 +80,9 @@ export class ConfigHelper {
       }
       if (nivelResult.value) {
         this.nivel = JSON.parse(nivelResult.value);
+      }
+      if (vibrationResult.value) {
+        this.vibrationSelected = JSON.parse(vibrationResult.value);
       }
     } catch (err) {
       console.warn('ConfigHelper: error loading config from Preferences, using defaults', err);
@@ -115,20 +124,80 @@ export class ConfigHelper {
     }
   }
 
+  private async saveVibration(): Promise<void> {
+    try {
+      await Preferences.set({
+        key: ConfigHelper.KEYS.VIBRATION,
+        value: JSON.stringify(this.vibrationSelected),
+      });
+    } catch (err) {
+      console.warn('ConfigHelper: error saving vibration to Preferences', err);
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Sounds
   // ---------------------------------------------------------------------------
 
+  /**
+   * Return only the preset (bundled) sounds.
+   */
   public getSounds() {
     return this.sounds;
   }
 
+  /**
+   * Return all available sounds: preset + user-imported.
+   *
+   * Preset sounds are converted to `SoundOption` with `isPreset: true`.
+   * Imported sounds come from `SoundImportService` and are mapped to
+   * `SoundOption` with `isPreset: false` and `metadata` populated.
+   *
+   * The combined list is compatible with the legacy `{id, value}` format
+   * because every entry includes both fields.
+   */
+  public async getAllSounds(): Promise<SoundOption[]> {
+    const presetSounds: SoundOption[] = this.sounds.map((s) => ({
+      id: s.id,
+      value: s.value,
+      displayName: `Sonido ${s.id}`,
+      isPreset: true,
+    }));
+
+    await this.soundImportService.ready();
+
+    const importedSounds: SoundOption[] = this.soundImportService
+      .getImportedSounds()
+      .map((imp: ImportedSound) => ({
+        id: imp.id,
+        value: imp.localPath,
+        displayName: imp.displayName,
+        isPreset: false,
+        metadata: {
+          fileName: imp.fileName,
+          mimeType: imp.mimeType,
+          size: imp.size,
+          importedAt: new Date(imp.importedAt),
+          originalPath: imp.originalPath,
+        },
+      }));
+
+    return [...presetSounds, ...importedSounds];
+  }
+
+  /**
+   * Return the currently selected sound (legacy format).
+   */
   public getSound() {
     return this.soundSelected;
   }
 
-  public setSound(sound: {id: number, value: string}) {
-    this.soundSelected = sound;
+  /**
+   * Set the active sound. Accepts both legacy `{id, value}` objects
+   * and full `SoundOption` objects — only `id` and `value` are used.
+   */
+  public setSound(sound: {id: number | string, value: string}) {
+    this.soundSelected = {id: Number(sound.id), value: sound.value};
     this.saveSound();
   }
 
@@ -156,5 +225,26 @@ export class ConfigHelper {
 
   public getNivel() {
     return this.nivel;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Vibration
+  // ---------------------------------------------------------------------------
+
+  public getVibrationPatterns() {
+    return VIBRATION_PATTERNS;
+  }
+
+  public getVibration() {
+    return this.vibrationSelected;
+  }
+
+  public setVibration(vibration: VibrationPattern) {
+    this.vibrationSelected = vibration;
+    this.saveVibration();
+  }
+
+  public getVibrationPattern(): number[] {
+    return this.vibrationSelected.pattern;
   }
 }

@@ -8,6 +8,8 @@ import { Battery } from 'src/app/models/battery.model';
 import { BatteryProvider } from 'src/app/providers/battery.provider';
 import { BackgroundModeService } from 'src/app/providers/background-mode.service';
 import { SoundComponent } from '../modals/sound/sound.component';
+import { VibrationComponent } from '../modals/vibration/vibration.component';
+import { VibrationPattern, VIBRATION_PATTERNS, DEFAULT_VIBRATION_PATTERN_ID } from 'src/app/models/vibration.model';
 
 @Component({
   selector: 'app-battery',
@@ -23,6 +25,7 @@ export class BatteryPage implements OnInit, OnDestroy, ViewWillEnter {
   public activatedAlarm = false;
   private tempChange: any;
   public sound: any = { id: 1, value: 'assets/sounds/sonido-1.mp3' };
+  public vibration: VibrationPattern = VIBRATION_PATTERNS.find(v => v.id === DEFAULT_VIBRATION_PATTERN_ID)!;
   public batteryInitialized = false;
 
   // Stored callback references for proper cleanup
@@ -181,11 +184,16 @@ export class BatteryPage implements OnInit, OnDestroy, ViewWillEnter {
 
   getConfig() {
     this.getSound();
+    this.getVibration();
     this.getIsActivatedAlarm();
   }
 
   getSound() {
     this.sound = this.configHelper.getSound();
+  }
+
+  getVibration() {
+    this.vibration = this.configHelper.getVibration();
   }
 
   getIsActivatedAlarm() {
@@ -236,7 +244,11 @@ export class BatteryPage implements OnInit, OnDestroy, ViewWillEnter {
       // Audio element not available in this context
     }
 
-    window.navigator.vibrate(0) && window.navigator.vibrate([2000, 500, 1000]);
+    // Vibración configurable
+    if ('vibrate' in navigator) {
+      navigator.vibrate(0);
+      navigator.vibrate(this.configHelper.getVibrationPattern());
+    }
 
     // LocalNotification fires even when the app is backgrounded
     this.setNotification(msj ?? 'Batería fuera de rango');
@@ -254,7 +266,9 @@ export class BatteryPage implements OnInit, OnDestroy, ViewWillEnter {
     } catch (e) {
       // Ignore errors when backgrounded
     }
-    window.navigator.vibrate(0);
+    if ('vibrate' in navigator) {
+      navigator.vibrate(0);
+    }
     this.changeDetectorRef.detectChanges();
   }
 
@@ -296,6 +310,17 @@ export class BatteryPage implements OnInit, OnDestroy, ViewWillEnter {
     await modal.present();
     modal.onWillDismiss().then( (data) => {
       if (data.data) { this.getSound(); }
+    });
+  }
+
+  async onClickVibration() {
+    const modal = await this.modalController.create({
+      component: VibrationComponent,
+      cssClass: 'my-custom-class'
+    });
+    await modal.present();
+    modal.onWillDismiss().then((data) => {
+      if (data.data) { this.getVibration(); }
     });
   }
 }

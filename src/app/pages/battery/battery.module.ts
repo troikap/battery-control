@@ -22,6 +22,7 @@ import {
 } from '@ionic/angular';
 
 import { BatteryPageRoutingModule } from './battery-routing.module';
+import { ComponentesModule } from '../modals/componentes.module';
 
 import { BatteryPage } from './battery.page';
 
@@ -30,6 +31,7 @@ import { BatteryPage } from './battery.page';
     CommonModule,
     FormsModule,
     BatteryPageRoutingModule,
+    ComponentesModule,
     IonHeader,
     IonToolbar,
     IonTitle,

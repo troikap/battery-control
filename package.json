@@ -37,6 +37,7 @@
     "@capacitor/local-notifications": "^8.3.1",
     "@capacitor/preferences": "^8.0.1",
     "@capacitor/status-bar": "^8.0.3",
+    "@capgo/capacitor-file-picker": "^8.1.11",
     "@ionic/angular": "^9.0.2",
     "cordova-plugin-background-mode": "^0.7.3",
     "cordova-plugin-battery-status": "^2.0.3",

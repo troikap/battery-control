@@ -4,31 +4,110 @@
       <ion-icon name="musical-notes"></ion-icon>
     </ion-button>
     <ion-title>Sonidos</ion-title>
-    <ion-buttons slot="end" (click)="loadPlayer()">
-      <ion-button fill="clear">
+    <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="loadPlayer()">
         <ion-icon name="stop-circle"></ion-icon>
+      </ion-button>
+      <ion-button
+        fill="clear"
+        (click)="importSound()"
+        [disabled]="!canImportMore"
+        title="Importar sonido"
+      >
+        <ion-icon name="add-circle"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
-  <ion-row *ngIf="sounds">
+  <!-- Preset Sounds Section -->
+  <div class="section-header" *ngIf="presetSounds.length > 0">
+    <ion-icon name="musical-note-outline"></ion-icon>
+    <span>Sonidos Predefinidos</span>
+  </div>
+  <ion-row *ngIf="presetSounds.length > 0">
     <ion-col>
-      <ion-list okText="Aceptar" cancelText="Cancelar">
-        <ion-item *ngFor="let sound of sounds" (click)="onClickSound(sound)">
-          <ion-label class="ion-text-center">
-            {{sound.id}} - {{sound.value}}
+      <ion-list>
+        <ion-item
+          *ngFor="let sound of presetSounds"
+          (click)="onClickSound(sound)"
+          [class.selected]="isSelected(sound)"
+          button
+        >
+          <ion-icon name="volume-high-outline" slot="start"></ion-icon>
+          <ion-label>
+            <h2>{{ sound.displayName }}</h2>
           </ion-label>
-          <ion-button (click)="presentAlertConfirm()">
+          <ion-button
+            (click)="presentAlertConfirm(); $event.stopPropagation()"
+            fill="outline"
+            slot="end"
+            size="small"
+          >
             Seleccionar
           </ion-button>
         </ion-item>
       </ion-list>
     </ion-col>
   </ion-row>
+
+  <!-- Imported Sounds Section -->
+  <div class="section-header" *ngIf="importedSounds.length > 0 || canImportMore">
+    <ion-icon name="folder-outline"></ion-icon>
+    <span>Mis Sonidos Importados</span>
+  </div>
+
+  <ion-row *ngIf="importedSounds.length > 0">
+    <ion-col>
+      <ion-list>
+        <ion-item
+          *ngFor="let sound of importedSounds"
+          (click)="onClickSound(sound)"
+          [class.selected]="isSelected(sound)"
+          button
+        >
+          <ion-icon name="musical-note-outline" slot="start"></ion-icon>
+          <ion-label>
+            <h2>{{ sound.displayName }}</h2>
+            <p *ngIf="sound.metadata?.fileName">
+              {{ sound.metadata.fileName }} &middot; {{ formatSize(sound.metadata.size || 0) }}
+            </p>
+          </ion-label>
+          <ion-buttons slot="end">
+            <ion-button
+              (click)="presentAlertConfirm(); $event.stopPropagation()"
+              fill="outline"
+              size="small"
+            >
+              Seleccionar
+            </ion-button>
+            <ion-button
+              (click)="confirmRemoveImported(sound); $event.stopPropagation()"
+              fill="clear"
+              color="danger"
+              size="small"
+            >
+              <ion-icon name="trash"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-item>
+      </ion-list>
+    </ion-col>
+  </ion-row>
+
+  <!-- Empty state for imported sounds -->
+  <div
+    class="empty-state"
+    *ngIf="importedSounds.length === 0 && canImportMore"
+  >
+    <ion-icon name="folder-open-outline"></ion-icon>
+    <p>No tiene sonidos importados.</p>
+    <p>Presione el boton + para importar un archivo de audio.</p>
+  </div>
+
   <div>
-    <audio [src]="soundSelected.value" id='player-modal'></audio>
+    <audio [src]="soundSelected?.value" id="player-modal"></audio>
   </div>
 </ion-content>
 

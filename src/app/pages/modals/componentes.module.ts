@@ -17,10 +17,12 @@ import {
   IonFooter,
 } from '@ionic/angular';
 import { SoundComponent } from './sound/sound.component';
+import { VibrationComponent } from './vibration/vibration.component';
 
 @NgModule({
   declarations: [
-    SoundComponent
+    SoundComponent,
+    VibrationComponent
   ],
   exports: [
   ],

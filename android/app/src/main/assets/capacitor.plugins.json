@@ -14,5 +14,9 @@
 	{
 		"pkg": "@capacitor/status-bar",
 		"classpath": "com.capacitorjs.plugins.statusbar.StatusBarPlugin"
+	},
+	{
+		"pkg": "@capgo/capacitor-file-picker",
+		"classpath": "app.capgo.capacitor.filepicker.CapgoFilePickerPlugin"
 	}
 ]

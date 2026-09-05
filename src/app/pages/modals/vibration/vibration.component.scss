@@ -1,0 +1,25 @@
+ion-item {
+  --background: var(--ion-color-light);
+  --border-radius: 8px;
+  margin-bottom: 8px;
+
+  ion-icon {
+    color: var(--ion-color-primary);
+    font-size: 24px;
+    margin-right: 12px;
+  }
+
+  ion-label h2 {
+    font-weight: 600;
+    font-size: 16px;
+  }
+
+  ion-label p {
+    font-size: 12px;
+    color: var(--ion-color-medium);
+  }
+}
+
+ion-toolbar {
+  --background: var(--ion-color-light);
+}
