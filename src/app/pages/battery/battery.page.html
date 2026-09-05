@@ -1,11 +1,11 @@
-<ion-header [translucent]="true">
-  <ion-toolbar color=primary>
-    <ion-button slot="start" color="secondary" fill="clear">
+<ion-header>
+  <ion-toolbar>
+    <ion-button slot="start" fill="clear">
       <ion-icon name="battery-charging"></ion-icon>
     </ion-button>
     <ion-title>Bateria</ion-title>
     <ion-buttons slot="end" (click)="activateAlarm()">
-      <ion-button color="secondary" fill="outline">
+      <ion-button fill="outline">
         <ion-label *ngIf="!activatedAlarm">Desactivado</ion-label>
         <ion-label *ngIf="activatedAlarm">Activado</ion-label>
         <ion-icon name="volume-mute" *ngIf="!activatedAlarm"></ion-icon>
@@ -15,10 +15,10 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" color="secondary">
+<ion-content [fullscreen]="true">
   <div class="ion-text-center ion-padding-top small-title" *ngIf="nivel">
-    <p class="ion-no-margin">
-     <span class="color-danger">{{nivel.lower}} %</span> - <span class="color-success">{{nivel.upper}} %</span>
+    <p class="ion-no-margin" style="font-size: 1.8rem; font-weight: 600;">
+     <span class="color-danger">{{nivel.lower}}%</span> <span style="color: var(--ion-color-medium);">—</span> <span class="color-success">{{nivel.upper}}%</span>
     </p>
   </div>
   <ion-list>
@@ -26,7 +26,11 @@
       <ion-range class="ion-no-padding" dualKnobs="true" min="0" max="100" step="1" snaps="true" pin="true" [(ngModel)]="nivel" (ionChange)="onChangeNivel()"></ion-range>
     </ion-item>
   </ion-list>
-  <div *ngIf="currentBatteryStatus && nivel">
+  <div *ngIf="!batteryInitialized" class="ion-text-center ion-padding">
+    <ion-spinner name="crescent"></ion-spinner>
+    <p>Obteniendo estado de bateria...</p>
+  </div>
+  <div *ngIf="batteryInitialized && nivel">
     <ion-item class='medium-title ion-text-center' lines=none>
       <ion-row>
         <ion-col>
@@ -54,7 +58,6 @@
     <ion-item class='super-title ion-text-center' lines=none>
       <ion-row>
         <ion-col>
-          <ion-spinner pin="true" name="crescent"></ion-spinner>
           <p><strong>
               {{currentBatteryStatus.level}}%
             </strong>
@@ -64,11 +67,7 @@
     </ion-item>
   </div>
   <div>
-    <!-- <audio [src]="sound.value" id="player"></audio> -->
-    <audio [src]="sound.value" id='player'></audio>
-  </div>
-  <div>
-    <audio src="assets/sounds/sonido-1.mp3" id='sound-test'></audio>
+    <audio [src]="sound?.value" id='player'></audio>
   </div>
   <ion-button expand=full (click)="loadPlayer()" *ngIf="isActivatedSound">
     Parar sonido
@@ -79,32 +78,4 @@
     </ion-fab-button>
   </ion-fab>
 
-  <ion-fab vertical="bottom" horizontal="start" slot="fixed" class="fab-sound" *ngIf="activatedAlarm">
-    <ion-fab-button>
-      <ion-icon name="volume-high"></ion-icon>
-    </ion-fab-button>
-    <ion-fab-list side="end">
-      <ion-fab-button>
-        <p>{{promLevelSound}} %</p>
-        <ion-range class="ion-padding ion-margin-horizontal" min="0" [max]="maxLevelSound" step="1" snaps="true" pin="true" [(ngModel)]="levelSound" (ionChange)="setConfigAudio()"></ion-range>
-      </ion-fab-button>
-    </ion-fab-list>
-  </ion-fab>
-
 </ion-content>
-
-<ion-footer>
-  <ion-button (click)="setNotificationAdvance()">
-    setNotification
-  </ion-button>
-  <ion-button *ngIf="intervalPlayerTest" (click)="stopSoundTest()">
-    Parar test
-  </ion-button>
-  <ion-button *ngIf="!intervalPlayerTest" (click)="initIntervalPlayerTest()">
-    Iniciar test
-  </ion-button>
-  <ion-button *ngIf="intervalPlayerTest" (click)="cleanPlayerTest()">
-    cleanPlayerTest
-  </ion-button>
-  
-</ion-footer>

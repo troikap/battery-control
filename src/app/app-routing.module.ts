@@ -7,10 +7,6 @@ const routes: Routes = [
     loadChildren: () => import('./pages/battery/battery.module').then( m => m.BatteryPageModule)
   },
   {
-    path: 'power-by',
-    loadChildren: () => import('./pages/power-by/power-by.module').then( m => m.PowerByPageModule)
-  },
-  {
     path: '',
     redirectTo: 'battery',
     pathMatch: 'full'

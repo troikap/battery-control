@@ -6,9 +6,10 @@ import { ConfigHelper } from 'src/app/helpers/config.helper';
   selector: 'app-sound',
   templateUrl: './sound.component.html',
   styleUrls: ['./sound.component.scss'],
+  standalone: false,
 })
 export class SoundComponent implements OnInit {
-  public soundSelected;
+  public soundSelected: any;
   public sounds: {id: number, value: string}[] = [];
   public myPlayer: any;
 
@@ -33,7 +34,7 @@ export class SoundComponent implements OnInit {
     this.soundSelected = this.configHelper.getSound();
   }
 
-  onClickSound(sound) {
+  onClickSound(sound: any) {
     this.soundSelected = sound;
     this.playPlayer();
   }

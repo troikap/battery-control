@@ -1,21 +1,22 @@
 {
-  "appId": "io.ionic.starter",
-  "appName": "battery-control",
-  "bundledWebRuntime": false,
-  "npmClient": "npm",
-  "webDir": "www",
-  "plugins": {
-    "SplashScreen": {
-      "launchShowDuration": 0
-    },
-    "LocalNotifications": {
-      "smallIcon": "ic_launcher_round",
-      "iconColor": "#a9c1ae",
-      "sound": "sonido_3_wav.wav"
-    }
-  },
-  "cordova": {},
-  "android": {
-    "backgroundColor": "#536a58"
-  }
+	"appId": "io.ionic.starter",
+	"appName": "battery-control",
+	"npmClient": "npm",
+	"webDir": "www/browser",
+	"server": {
+		"androidScheme": "http"
+	},
+	"plugins": {
+		"SplashScreen": {
+			"launchShowDuration": 0
+		},
+		"LocalNotifications": {
+			"smallIcon": "ic_launcher_round",
+			"iconColor": "#a9c1ae",
+			"sound": "sonido_3_wav.wav"
+		}
+	},
+	"android": {
+		"backgroundColor": "#536a58"
+	}
 }

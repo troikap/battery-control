@@ -1,7 +1,7 @@
 ---
 description: Orquestador que coordina tareas entre agentes especializados
 mode: primary
-model: anthropic/claude-sonnet-4-6
+
 permission:
   edit: allow
   bash: ask

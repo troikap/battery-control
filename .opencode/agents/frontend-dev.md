@@ -1,7 +1,7 @@
 ---
 description: Desarrollador Angular/Ionic para desarrollo de UI
 mode: subagent
-model: anthropic/claude-sonnet-4-6
+
 ---
 
 Eres un desarrollador frontend especializado en Angular 11.2 y Ionic 5.5.2.

@@ -1,37 +1,52 @@
-import { Injectable } from '@angular/core';
-import { BatteryStatus } from '@ionic-native/battery-status/ngx';
+import { Injectable, NgZone } from '@angular/core';
 import { Battery } from '../models/battery.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class BatteryProvider {
-  private batteryStatusChange;
-  private lastStatusBattery: Battery;
+  private lastStatusBattery: Battery = { level: 0, isPlugged: false };
+  private initialized = false;
 
-  constructor(
-    private batteryStatus: BatteryStatus,
-  ) {
-    this.createBatteryStatusChange();
+  constructor(private zone: NgZone) {}
+
+  isInitialized(): boolean {
+    return this.initialized;
   }
 
-  getBatteryStatus() {
-    return this.batteryStatus;
+  async initBatteryListener(callback: (status: Battery) => void): Promise<void> {
+    try {
+      const nav = navigator as any;
+      if (nav.getBattery) {
+        const battery = await nav.getBattery();
+
+        const updateBattery = () => {
+          this.zone.run(() => {
+            const status: Battery = {
+              level: Math.round(battery.level * 100),
+              isPlugged: battery.charging,
+            };
+            this.lastStatusBattery = status;
+            this.initialized = true;
+            callback(status);
+          });
+        };
+
+        battery.addEventListener('chargingchange', updateBattery);
+        battery.addEventListener('levelchange', updateBattery);
+
+        updateBattery();
+      } else {
+        console.warn('Web Battery API is not supported in this browser');
+        this.initialized = true;
+      }
+    } catch (err) {
+      console.error('Error initializing battery listener:', err);
+      this.initialized = true;
+    }
   }
 
-  getBatteryStatusChange() {
-    return this.batteryStatusChange;
-  }
-
-  private createBatteryStatusChange() {
-    this.batteryStatusChange = this.batteryStatus.onChange();
-  }
-
-  setStatusBattery( statusBattery: Battery) {
-    this.lastStatusBattery = statusBattery;
-  }
-
-  getStatusBattery() {
+  getStatusBattery(): Battery {
     return this.lastStatusBattery;
   }
 }

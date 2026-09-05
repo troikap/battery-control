@@ -1,7 +1,21 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { IonicModule } from '@ionic/angular';
+import {
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonButtons,
+  IonButton,
+  IonIcon,
+  IonContent,
+  IonRow,
+  IonCol,
+  IonList,
+  IonItem,
+  IonLabel,
+  IonFooter,
+} from '@ionic/angular';
 import { SoundComponent } from './sound/sound.component';
 
 @NgModule({
@@ -11,10 +25,22 @@ import { SoundComponent } from './sound/sound.component';
   exports: [
   ],
   imports: [
-    IonicModule,
     CommonModule,
     FormsModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonButtons,
+    IonButton,
+    IonIcon,
+    IonContent,
+    IonRow,
+    IonCol,
+    IonList,
+    IonItem,
+    IonLabel,
+    IonFooter,
   ]
 })
 

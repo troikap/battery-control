@@ -19,10 +19,88 @@ ion-menu-button {
 #container p {
   font-size: 16px;
   line-height: 22px;
-  color: #8c8c8c;
+  color: var(--ion-color-light);
   margin: 0;
 }
 
 #container a {
   text-decoration: none;
+}
+
+/* Estilos específicos para la página de batería */
+ion-content {
+  --background: var(--ion-color-dark);
+}
+
+ion-header ion-toolbar {
+  --background: #1a365d;
+  --color: #ffffff;
+}
+
+/* Estilos para el indicador de batería */
+.battery-indicator {
+  --background: var(--ion-color-secondary);
+  --indicator-background: var(--ion-color-primary);
+}
+
+/* Estilos para textos de nivel de batería */
+.battery-level {
+  color: var(--ion-color-primary);
+  font-weight: bold;
+}
+
+.battery-status {
+  color: var(--ion-color-light);
+}
+
+/* Estilos para porcentajes */
+.battery-percentage {
+  color: #ffffff;
+  font-weight: bold;
+  font-size: 4rem;
+}
+
+/* Estilos para rangos en la página */
+ion-range {
+  --bar-background: #64748b;
+  --bar-background-active: var(--ion-color-primary);
+  --bar-height: 6px;
+  --knob-background: #ffffff;
+  --knob-border-color: var(--ion-color-primary);
+  --knob-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  --pin-color: #ffffff;
+  --pin-background: var(--ion-color-primary);
+}
+
+/* Estilos para alertas */
+.alert-low-battery {
+  --background: var(--ion-color-danger);
+  color: var(--ion-color-danger-contrast);
+}
+
+.alert-medium-battery {
+  --background: var(--ion-color-warning);
+  color: var(--ion-color-warning-contrast);
+}
+
+.alert-high-battery {
+  --background: var(--ion-color-success);
+  color: var(--ion-color-success-contrast);
+}
+
+/* Estilos para el título grande */
+.super-title p {
+  color: #ffffff;
+  font-weight: bold;
+}
+
+/* Estilos para el título mediano */
+.medium-title p {
+  color: #ffffff;
+  font-weight: bold;
+}
+
+/* Estilos para el spinner */
+ion-spinner {
+  color: var(--ion-color-primary);
 }

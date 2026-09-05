@@ -1,9 +1,11 @@
 {
   "appId": "io.ionic.starter",
   "appName": "battery-control",
-  "bundledWebRuntime": false,
   "npmClient": "npm",
-  "webDir": "www",
+  "webDir": "www/browser",
+  "server": {
+    "androidScheme": "http"
+  },
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 0
@@ -14,7 +16,6 @@
       "sound": "sonido_3_wav.wav"
     }
   },
-  "cordova": {},
   "android": {
     "backgroundColor": "#536a58"
   }

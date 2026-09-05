@@ -4,9 +4,9 @@
 Ionic Angular mobile app for battery level monitoring and alerts. Uses Capacitor for native Android integration.
 
 ## Tech Stack
-- Angular 11.2, Ionic 5.5.2, Capacitor 2.4.7
-- TypeScript 4.0, SCSS
-- Native plugins: BatteryStatus, BackgroundMode, AudioManagement, Vibration
+- Angular 22.1, Ionic 9.0, Capacitor 8.5
+- TypeScript 6.0, SCSS
+- Native plugins: Device, LocalNotifications, Preferences, StatusBar, BackgroundMode (Cordova)
 
 ## Commands
 ```bash
@@ -40,7 +40,7 @@ ng e2e               # E2E tests (Protractor) - NOTE: e2e folder does not exist
 ## Android Build
 - Capacitor config: `capacitor.config.json`
 - Android project: `android/` directory
-- Build output: `www/` directory (copy to Android assets)
+- Build output: `www/browser/` directory (synced to Android assets via `npx cap sync android`)
 
 ## Common Issues
 - Native plugins only work on device/emulator, not in browser

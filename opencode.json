@@ -14,38 +14,31 @@
   "agent": {
     "architect": {
       "description": "Arquitecto de software para diseño de sistema y patrones",
-      "mode": "subagent",
-      "model": "anthropic/claude-sonnet-4-6"
+      "mode": "subagent"
     },
     "frontend-dev": {
       "description": "Desarrollador Angular/Ionic para desarrollo de UI",
-      "mode": "subagent",
-      "model": "anthropic/claude-sonnet-4-6"
+      "mode": "subagent"
     },
     "backend-dev": {
       "description": "Desarrollador de servicios y lógica de negocio",
-      "mode": "subagent",
-      "model": "anthropic/claude-sonnet-4-6"
+      "mode": "subagent"
     },
     "ui-designer": {
       "description": "Diseñador de interfaces y experiencia de usuario",
-      "mode": "subagent",
-      "model": "anthropic/claude-sonnet-4-6"
+      "mode": "subagent"
     },
     "qa-engineer": {
       "description": "Ingeniero de calidad y testing",
-      "mode": "subagent",
-      "model": "anthropic/claude-sonnet-4-6"
+      "mode": "subagent"
     },
     "tech-lead": {
       "description": "Líder técnico para revisión y aprobación de cambios",
-      "mode": "subagent",
-      "model": "anthropic/claude-sonnet-4-6"
+      "mode": "subagent"
     },
     "orchestrator": {
       "description": "Orquestador que coordina tareas entre agentes especializados",
       "mode": "primary",
-      "model": "anthropic/claude-sonnet-4-6",
       "permission": { "edit": "allow", "bash": "ask" }
     }
   },

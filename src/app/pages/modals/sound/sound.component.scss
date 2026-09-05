@@ -1,35 +1,65 @@
-ion-menu-button {
-  color: var(--ion-color-primary);
+/* Estilos específicos para el modal de sonido */
+ion-content {
+  --background: #0f172a;
 }
 
-#container {
-  text-align: center;
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
+ion-header ion-toolbar {
+  --background: #1a365d;
+  --color: #ffffff;
 }
 
-#container strong {
-  font-size: 20px;
-  line-height: 26px;
+ion-footer ion-toolbar {
+  --background: #0f172a;
 }
 
-#container p {
-  font-size: 16px;
-  line-height: 22px;
-  color: #8c8c8c;
-  margin: 0;
-}
-
-#container a {
-  text-decoration: none;
+/* Lista de sonidos - limpia sin bordes feos */
+ion-list {
+  background: transparent !important;
+  padding: 0 8px;
 }
 
 ion-item {
-  --inner-box-shadow: 0 0 11px 1px inset var(--ion-color-primary);
-  --padding-start: 0;
+  --background: #1e293b;
+  --border-color: #334155;
+  --inner-box-shadow: none;
+  --padding-start: 12px;
+  --padding-end: 8px;
   --inner-padding-start: 0;
-  padding-bottom: 4px;
+  --min-height: 56px;
+  border-radius: 8px;
+  margin-bottom: 4px;
+}
+
+ion-item ion-label {
+  color: #e2e8f0;
+  font-size: 0.9rem;
+}
+
+/* Botón Seleccionar - outline limpio */
+ion-item ion-button {
+  --border-radius: 6px;
+  --padding-start: 12px;
+  --padding-end: 12px;
+}
+
+/* Botón Cancelar del footer */
+ion-footer ion-button {
+  --background: #1e293b;
+  --color: #e2e8f0;
+  --border-radius: 8px;
+  --padding-top: 14px;
+  --padding-bottom: 14px;
+  font-weight: 600;
+}
+
+/* Estilos para rangos en el modal */
+ion-range {
+  --bar-background: #64748b;
+  --bar-background-active: var(--ion-color-primary);
+  --bar-height: 6px;
+  --knob-background: #ffffff;
+  --knob-border-color: var(--ion-color-primary);
+  --knob-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  --pin-color: #ffffff;
+  --pin-background: var(--ion-color-primary);
 }

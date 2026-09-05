@@ -1,36 +1,29 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { AudioManagement } from '@ionic-native/audio-management/ngx';
-import { BackgroundMode } from '@ionic-native/background-mode/ngx';
-import { BatteryStatus } from '@ionic-native/battery-status/ngx';
-import { Vibration } from '@ionic-native/vibration/ngx';
+import { ChangeDetectorRef, Component, OnInit, OnDestroy } from '@angular/core';
+import { ViewWillEnter } from '@ionic/angular';
 import { ModalController } from '@ionic/angular';
+import { LocalNotifications } from '@capacitor/local-notifications';
 import { ConfigHelper } from 'src/app/helpers/config.helper';
 import { ToastHelper } from 'src/app/helpers/toast.helper';
 import { Battery } from 'src/app/models/battery.model';
 import { BatteryProvider } from 'src/app/providers/battery.provider';
+import { BackgroundModeService } from 'src/app/providers/background-mode.service';
 import { SoundComponent } from '../modals/sound/sound.component';
-import { Plugins } from '@capacitor/core';
-const { LocalNotifications } = Plugins;
 
 @Component({
   selector: 'app-battery',
   templateUrl: './battery.page.html',
   styleUrls: ['./battery.page.scss'],
+  standalone: false,
 })
-export class BatteryPage implements OnInit {
-  public batteryStatusChange;
-  public currentBatteryStatus: Battery;
+export class BatteryPage implements OnInit, OnDestroy, ViewWillEnter {
+  public currentBatteryStatus: Battery = { level: 0, isPlugged: false };
   public myPlayer: any;
-  public myPlayerTest: any;
-  public nivel: {lower: number, upper: number};
-  public isActivatedSound;
-  public activatedAlarm;
-  private tempChange;
-  public sound;// = {id: 1, value: "assets/sounds/sound-1.mp3"}
-  public levelSound = 0;
-  public maxLevelSound = 15;
-  public promLevelSound = 0;
-  private intervalPlayerTest;
+  public nivel: {lower: number, upper: number} = { lower: 20, upper: 80 };
+  public isActivatedSound = false;
+  public activatedAlarm = false;
+  private tempChange: any;
+  public sound: any = { id: 1, value: 'assets/sounds/sonido-1.mp3' };
+  public batteryInitialized = false;
 
   constructor(
     private changeDetectorRef: ChangeDetectorRef,
@@ -38,129 +31,89 @@ export class BatteryPage implements OnInit {
     private toastHelper: ToastHelper,
     private modalController: ModalController,
     private configHelper: ConfigHelper,
-    private batteryStatus: BatteryStatus,
-    private backgroundMode: BackgroundMode,
-    private audioManagement: AudioManagement,
-    private vibration: Vibration
-    ) { 
-    console.log(' Constructor BatteryPage')
-    this.getConfig();
+    private backgroundModeService: BackgroundModeService,
+    ) {}
+
+  async ionViewWillEnter() {
+    await this.configHelper.ready();
     this.nivel = this.configHelper.getNivel();
+    this.getConfig();
     this.currentBatteryStatus = this.batteryProvider.getStatusBattery();
+    this.batteryInitialized = this.batteryProvider.isInitialized();
+    this.backgroundModeService.init();
+    this.initTask();
   }
-  
+
   ngOnInit() {
-    console.log('ngOnInit BatteryPage')
     this.myPlayer = document.getElementById('player');
-    this.myPlayerTest = document.getElementById('sound-test');
+  }
+
+  ngOnDestroy() {
+    this.cleanUp();
+    // Disable background mode when leaving the page
+    this.backgroundModeService.destroy();
+  }
+
+  cleanUp() {
+    if (this.tempChange) {
+      clearTimeout(this.tempChange);
+      this.tempChange = null;
+    }
   }
 
   initTask() {
     this.onStartBateryControl();
     this.changeDetectorRef.detectChanges();
-    this.setConfigLevelSound();
     this.registerLocalNotification();
-    this.initIntervalPlayerTest();
-  }
-
-  initIntervalPlayerTest() {
-    this.intervalPlayerTest = setInterval( async () => {
-      try {
-        if (!this.myPlayerTest) {
-          console.log('NO SE ENCONTRO EL AUDIO')
-          this.toastHelper.presentToast('No se encontro el audio - myPlayerTest', 1500, 'danger');
-          return;
-        }
-        await this.myPlayerTest.play();
-        setTimeout( async () => {
-          await this.myPlayerTest.load();
-        }, 3000);
-        window.navigator.vibrate(0) && window.navigator.vibrate([2000,500,1000]);
-        // this.vibration && this.vibration.vibrate([2000,1000,2000]);
-      } catch (err) {
-        console.log('Problemas al resolver initIntervalPlayerTest ', err);
-      }
-    }, 5000);
-  }
-
-  stopSoundTest() {
-    clearInterval(this.intervalPlayerTest);
-    this.intervalPlayerTest = null;
-    this.toastHelper.presentToast('Intervalo myPlayerTest parado', 1500, 'success');
   }
 
   async registerLocalNotification() {
-    await LocalNotifications.requestPermission();
-    LocalNotifications.registerActionTypes({
-      types: [
-        {
-          id: 'CHAT_MSG',
-          actions: [
-            {
-              id: 'view',
-              title: 'Open Chat'
-            },
-            {
-              id: 'remove',
-              title: 'Dismiss',
-              destructive: true
-            },
-            {
-              id: 'view',
-              title: 'Open Chat'
-            },
-          ]
-        }
-      ]
-    })
+    try {
+      await LocalNotifications.requestPermissions();
+    } catch (err) {
+      console.error('LocalNotifications permissions error:', err);
+    }
   }
 
   async setNotification(msj: string) {
-    console.log('sonido ', this.sound.value )
-    const notifs = await LocalNotifications.schedule({
-      notifications: [
-        {
-          title: "Cuide su bateria",
-          body: msj,
-          id: 1,
-          // actionTypeId: "",
-          extra: {
-            data: 'Pasa tu informacion para manejarla'
-          },
-        }
-      ]
-    });
-  }
-
-  async setNotificationAdvance(msj: string) {
-    console.log('sonido ', this.sound.value )
-    const notifs = await LocalNotifications.schedule({
-      notifications: [
-        {
-          title: "Cuide su bateria",
-          body: msj,
-          id: 2,
-          actionTypeId: "CHAT_MSG",
-          extra: {
-            data: 'Pasa tu informacion para manejarla'
-          },
-          attachments: [
-            { id: 'face', url: 'res://public/assets/imgs/notification.jpg'}
-          ]
-        }
-      ]
-    });
-  }
-
-  async setConfigLevelSound() {
     try {
-      const maxVolumen = await this.audioManagement.getMaxVolume(AudioManagement.VolumeType.MUSIC);
-      const volumen = await this.audioManagement.getVolume(AudioManagement.VolumeType.MUSIC )
-      if (maxVolumen) { this.maxLevelSound = maxVolumen.maxVolume }
-      if (volumen) { this.levelSound = volumen.volume }
-      this.promLevelSound = Math.trunc((this.levelSound * 100) / this.maxLevelSound);
+      await LocalNotifications.schedule({
+        notifications: [
+          {
+            title: "Cuide su bateria",
+            body: msj,
+            id: 1,
+            extra: {
+              data: 'Pasa tu informacion para manejarla'
+            },
+          }
+        ]
+      });
     } catch (err) {
-      console.log('CATCH - setConfigLevelSound ', err);
+      console.error('Error scheduling notification:', err);
+    }
+  }
+
+  async setNotificationAdvance(msj: string = 'Batería fuera de rango') {
+    try {
+      await LocalNotifications.schedule({
+        notifications: [
+          {
+            title: "Cuide su bateria",
+            body: msj,
+            id: 2,
+            actionTypeId: "CHAT_MSG",
+            extra: {
+              data: 'Pasa tu informacion para manejarla'
+            },
+            attachments: [
+              { id: 'face', url: 'res://public/assets/imgs/notification.jpg' as any }
+            ]
+          }
+        ]
+      });
+    } catch (err) {
+      console.error('Error scheduling advance notification:', err);
     }
   }
 
@@ -200,8 +153,7 @@ export class BatteryPage implements OnInit {
     this.isActivatedSound = true;
     this.myPlayer.play();
     window.navigator.vibrate(0) && window.navigator.vibrate([2000,500,1000]);
-    // this.vibration && this.vibration.vibrate([2000,1000,2000,2000,1000,2000,2000,1000,2000,2000,1000,2000]);
-    this.setNotification(msj);
+    this.setNotification(msj ?? 'Batería fuera de rango');
     this.changeDetectorRef.detectChanges();
   }
 
@@ -213,7 +165,6 @@ export class BatteryPage implements OnInit {
     this.isActivatedSound = false;
     this.myPlayer.load();
     window.navigator.vibrate(0);
-    // this.vibration && this.vibration.vibrate(0);
     this.changeDetectorRef.detectChanges();
   }
 
@@ -224,10 +175,9 @@ export class BatteryPage implements OnInit {
   }
 
   onStartBateryControl() {
-    this.batteryStatus.onChange().subscribe((status: Battery) => {
-      this.backgroundMode.wakeUp();
+    this.batteryProvider.initBatteryListener((status: Battery) => {
       this.currentBatteryStatus = status;
-      this.batteryProvider.setStatusBattery(status);
+      this.batteryInitialized = true;
       if (this.nivel && status.level <= this.nivel.lower && !status.isPlugged) {
         this.playPlayer('Por favor conecte su celular');
       }
@@ -236,6 +186,8 @@ export class BatteryPage implements OnInit {
       }
       this.changeDetectorRef.detectChanges();
     });
+
+    this.backgroundModeService.enable();
     this.changeDetectorRef.detectChanges();
   }
 
@@ -248,30 +200,5 @@ export class BatteryPage implements OnInit {
     modal.onWillDismiss().then( (data) => {
       if (data.data) { this.getSound(); }
     });
-  }
-
-  async onClickGetVolumen() {
-    console.log('Get volumen ')
-    try {
-      const value: AudioManagement.AudioModeReturn = await this.audioManagement.getAudioMode()
-      console.log('getAudioMode Device audio mode is ' + value.label + ' (' + value.audioMode + ') ');
-    } catch (err) {
-      console.log('CATCH - onClickGetVolumen ', err);
-    }
-    try {
-      const value = await this.audioManagement.getVolume(AudioManagement.VolumeType.MUSIC )
-      console.log('getVolume MUSIC  Device audio mode is ' + value.volume);
-    } catch (err) {
-      console.log('CATCH - getVolume MUSIC  ', err);
-    }
-  }
-
-  async setConfigAudio() {
-    this.promLevelSound = Math.trunc((this.levelSound * 100) / this.maxLevelSound);
-    try {
-      await this.audioManagement.setVolume( AudioManagement.VolumeType.MUSIC, this.levelSound);
-    } catch (err) {
-      console.log('CATCH - setConfigAudio ', err);
-    }
   }
 }

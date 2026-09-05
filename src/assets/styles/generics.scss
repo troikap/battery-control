@@ -1,6 +1,8 @@
 .super-title {
   p {
     font-size: 15vh;
+    color: #ffffff;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
   }
   ion-row {
     width: 100%;
@@ -14,6 +16,8 @@
 .medium-title {
   p {
     font-size: 3rem;
+    color: #ffffff;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   }
   ion-row {
     width: 100%;
@@ -37,12 +41,20 @@
 ion-spinner {
   width: 5rem;
   height: 5rem;
-  color: var(--ion-color-success);
+  color: var(--ion-color-primary);
 }
 
 ion-range {
   height: 4rem;
   padding-top: 2rem !important;
+  --bar-background: #64748b;
+  --bar-background-active: var(--ion-color-primary);
+  --bar-height: 6px;
+  --knob-background: #ffffff;
+  --knob-border-color: var(--ion-color-primary);
+  --knob-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  --pin-color: #ffffff;
+  --pin-background: var(--ion-color-primary);
   &.range-rotate {
     right: 0;
     position: absolute;
@@ -52,12 +64,33 @@ ion-range {
   }
 }
 
+/* Estilos para textos de porcentaje */
+.super-title p,
+.medium-title p {
+  color: #ffffff;
+}
+
+/* Estilos para el spinner y porcentaje grande */
+super-title ion-spinner,
+.medium-title ion-spinner {
+  color: var(--ion-color-primary);
+}
+
+/* Estilos para porcentajes de rango */
+ion-range + p,
+ion-range ~ p {
+  color: var(--ion-color-light);
+  font-weight: bold;
+}
+
 .color-danger {
-  color: var(--ion-color-danger);
+  color: #f87171;
+  text-shadow: 0 0 8px rgba(248, 113, 113, 0.4);
 }
 
 .color-success {
-  color: var(--ion-color-success);
+  color: #34d399;
+  text-shadow: 0 0 8px rgba(52, 211, 153, 0.4);
 }
 
 .color-secondary {
@@ -70,6 +103,8 @@ ion-range {
 
 ion-header {
   ion-toolbar {
+    --background: #1a365d;
+    --color: #ffffff;
     ion-icon {
       font-size: 2rem;
     } 
@@ -77,15 +112,16 @@ ion-header {
 }
 
 ion-content {
-  background-color: var(--ion-color-secondary);
+  background-color: var(--ion-color-dark);
 }
 
 ion-list {
-  background-color: var(--ion-color-secondary) !important;
+  background-color: transparent !important;
 }
 
 ion-item {
-  --background: var(--ion-color-secondary) !important;
+  --background: transparent !important;
+  --border-color: var(--ion-color-medium);
 }
 
 ion-button {
@@ -98,20 +134,88 @@ ion-fab {
       ion-fab-button {
         margin-top: -1rem;
         width: 14rem;
-        --border-radius: 5px;
-        --background: var(--ion-color-secondary);
+        --border-radius: 8px;
+        --background: #1e293b;
+        --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
         height: 4rem;
         ion-range {
           padding-top: 3rem;
         }
         p {
           position: absolute;
-          font-size: 2rem;
+          font-size: 1.4rem;
           margin: 0;
           padding: 0;
-          top: 0.4rem;
+          top: 0.5rem;
+          left: 1rem;
+          color: #e2e8f0;
+          font-weight: 600;
         }
       }
     }
   }
+}
+
+/* Estilos adicionales para tema oscuro */
+ion-card {
+  --background: var(--ion-color-dark);
+  --border-color: var(--ion-color-medium);
+}
+
+ion-backdrop {
+  background-color: rgba(15, 23, 42, 0.8);
+}
+
+ion-modal {
+  --background: var(--ion-color-dark);
+}
+
+ion-popover {
+  --background: var(--ion-color-dark);
+}
+
+ion-action-sheet {
+  --background: var(--ion-color-dark);
+}
+
+ion-alert {
+  --background: var(--ion-color-dark);
+}
+
+ion-toast {
+  --background: var(--ion-color-dark);
+}
+
+/* Estilos para botones */
+ion-button[fill="solid"] {
+  --background: var(--ion-color-primary);
+}
+
+ion-button[fill="outline"] {
+  --border-color: var(--ion-color-primary);
+  --color: var(--ion-color-primary);
+}
+
+/* Estilos para badges */
+ion-badge {
+  --background: var(--ion-color-primary);
+}
+
+/* FAB buttons principales */
+ion-fab-button {
+  --background: #1a365d;
+  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+ion-fab-button ion-icon {
+  color: #ffffff;
+}
+
+/* Estilos para segment */
+ion-segment {
+  --background: var(--ion-color-dark);
+}
+
+ion-segment-button {
+  --indicator-color: var(--ion-color-primary);
 }
