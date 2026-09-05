@@ -9,7 +9,7 @@ export class ToastHelper {
     message: string,
     duration: number,
     color: string,
-    position?: any
+    position: 'top' | 'middle' | 'bottom' = 'bottom'
   ) {
     const toast = await this.toastController.create({
       message,
