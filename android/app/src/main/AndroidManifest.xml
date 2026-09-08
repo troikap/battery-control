@@ -40,6 +40,31 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
+
+        <!-- Battery Control - Foreground Service for background monitoring -->
+        <!-- Use dataSync (available since Android 10) for maximum compatibility -->
+        <service
+            android:name="io.capawesome.capacitorjs.plugins.foregroundservice.AndroidForegroundService"
+            android:foregroundServiceType="dataSync"
+            android:exported="false" />
+
+        <!-- Battery Control - Receivers for boot and alarms -->
+        <receiver
+            android:name="io.ionic.starter.BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name="io.ionic.starter.AlarmReceiver"
+            android:enabled="true"
+            android:exported="false" />
+
     </application>
 
     <!-- Permissions -->
@@ -48,6 +73,8 @@
     <!-- Camera, Photos, input file -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <!-- Android 13+ audio permission for importing sounds -->
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
     <!-- Geolocation API -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -61,10 +88,46 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
 
+    <!-- Battery Control - Critical permissions for background alarm reliability -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.REQUEST_COMPANION_RUN_IN_BACKGROUND"/>
     <uses-permission android:name="android.permission.REQUEST_COMPANION_USE_DATA_IN_BACKGROUND"/>
+
+    <!-- Notification permission (Android 13+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
+    <!-- Exact alarm permission (Android 12+) -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+
+    <!-- Battery optimization exemption -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
+
+    <!-- Boot completed for restart after reboot -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+
+    <!-- Vibration for alarm alerts -->
+    <uses-permission android:name="android.permission.VIBRATE"/>
+
+    <!-- Auto-start permission for Xiaomi and other OEMs -->
+    <uses-permission android:name="android.permission.REQUEST_AUTO_START"/>
+
+    <!-- Queries for OEM-specific auto-start settings -->
+    <queries>
+        <package android:name="com.miui.securitycenter" />
+        <package android:name="com.samsung.android.lool" />
+        <package android:name="com.huawei.systemmanager" />
+        <package android:name="com.coloros.safecenter" />
+        <package android:name="com.oppo.safe" />
+        <package android:name="com.vivo.permissionmanager" />
+        <package android:name="com.oneplus.security" />
+        <package android:name="com.asus.mobilemanager" />
+        <package android:name="com.lenovo.powersetting" />
+        <package android:name="com.meizu.safe" />
+        <package android:name="com.iqoo.secure" />
+        <package android:name="com.evenwell.powersaving.g3" />
+        <package android:name="com.letv.android.letvsafe" />
+    </queries>
 
 </manifest>

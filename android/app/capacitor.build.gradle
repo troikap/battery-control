@@ -10,10 +10,14 @@ android {
 apply from: "../capacitor-cordova-android-plugins/cordova.variables.gradle"
 dependencies {
     implementation project(':capacitor-device')
+    implementation project(':capacitor-filesystem')
     implementation project(':capacitor-local-notifications')
     implementation project(':capacitor-preferences')
     implementation project(':capacitor-status-bar')
+    implementation project(':capawesome-team-capacitor-android-battery-optimization')
+    implementation project(':capawesome-team-capacitor-android-foreground-service')
     implementation project(':capgo-capacitor-file-picker')
+    implementation project(':squareetlabs-capacitor-dont-kill-my-app')
 
 }
 

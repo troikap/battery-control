@@ -1,15 +1,21 @@
 import { ChangeDetectorRef, Component, NgZone, OnInit, OnDestroy } from '@angular/core';
 import { ViewWillEnter } from '@ionic/angular';
-import { ModalController } from '@ionic/angular';
+import { ModalController, AlertController } from '@ionic/angular';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { ConfigHelper } from 'src/app/helpers/config.helper';
 import { ToastHelper } from 'src/app/helpers/toast.helper';
 import { Battery } from 'src/app/models/battery.model';
 import { BatteryProvider } from 'src/app/providers/battery.provider';
 import { BackgroundModeService } from 'src/app/providers/background-mode.service';
+import { BatteryAlarmService } from 'src/app/providers/battery-alarm.service';
+import { VibrationService } from 'src/app/providers/vibration.service';
 import { SoundComponent } from '../modals/sound/sound.component';
 import { VibrationComponent } from '../modals/vibration/vibration.component';
 import { VibrationPattern, VIBRATION_PATTERNS, DEFAULT_VIBRATION_PATTERN_ID } from 'src/app/models/vibration.model';
+import {
+  PermissionStep,
+  PermissionStepType,
+} from 'src/app/models/permission-step.model';
 
 @Component({
   selector: 'app-battery',
@@ -31,6 +37,7 @@ export class BatteryPage implements OnInit, OnDestroy, ViewWillEnter {
   // Stored callback references for proper cleanup
   private onActivateHandler: Function | null = null;
   private onDeactivateHandler: Function | null = null;
+  private backgroundModeServiceSkipShown = false;
 
   constructor(
     private changeDetectorRef: ChangeDetectorRef,
@@ -38,8 +45,11 @@ export class BatteryPage implements OnInit, OnDestroy, ViewWillEnter {
     private batteryProvider: BatteryProvider,
     private toastHelper: ToastHelper,
     private modalController: ModalController,
+    private alertController: AlertController,
     private configHelper: ConfigHelper,
     private backgroundModeService: BackgroundModeService,
+    private batteryAlarmService: BatteryAlarmService,
+    private vibrationService: VibrationService,
     ) {}
 
   async ionViewWillEnter() {
@@ -49,10 +59,12 @@ export class BatteryPage implements OnInit, OnDestroy, ViewWillEnter {
     this.currentBatteryStatus = this.batteryProvider.getStatusBattery();
     this.batteryInitialized = this.batteryProvider.isInitialized();
 
-    // Enable background mode before starting battery monitoring
+    // Permission flow with explanatory alerts before system redirects
+    await this.runPermissionFlow();
+
+    // Enable background mode as fallback for older devices
     this.backgroundModeService.init();
     this.backgroundModeService.enable();
-    this.backgroundModeService.disableBatteryOptimizations();
 
     // Listen for app foreground/background transitions
     this.registerBackgroundModeEvents();
@@ -69,6 +81,9 @@ export class BatteryPage implements OnInit, OnDestroy, ViewWillEnter {
     this.unregisterBackgroundModeEvents();
     this.batteryProvider.destroy();
     this.backgroundModeService.disable();
+    // Note: BatteryAlarmService.destroy() is NOT called here because we want
+    // the foreground service to keep running even when the page is destroyed.
+    // The service persists independently of the Angular component lifecycle.
   }
 
   cleanUp() {
@@ -115,6 +130,132 @@ export class BatteryPage implements OnInit, OnDestroy, ViewWillEnter {
   }
 
   // -------------------------------------------------------------------------
+  // Permission flow orchestration
+  // -------------------------------------------------------------------------
+
+  /**
+   * Check which permission steps are needed, show an explanatory alert
+   * for each one, and execute or skip based on user decision.
+   *
+   * This method replaces the direct `batteryAlarmService.initialize()` call.
+   * The service is kept decoupled from any UI component.
+   */
+  private async runPermissionFlow(): Promise<void> {
+    // Phase 1: Check what's needed (pure read, no side effects)
+    const result = await this.batteryAlarmService.checkPermissionSteps();
+
+    // Phase 2: Show alert for each step, execute or skip
+    for (const step of result.steps) {
+      const userDecision = await this.showPermissionAlert(step);
+
+      if (userDecision === 'continue') {
+        await this.batteryAlarmService.executePermissionStep(step);
+      } else if (userDecision === 'skipAlways') {
+        // Permanently skip this step - won't show again even after app restart
+        await this.batteryAlarmService.permanentlySkipStep(step.type);
+      } else {
+        // Skip for this session only
+        this.batteryAlarmService.skipStep(step.type);
+      }
+    }
+
+    // Phase 2b: Background mode battery optimization (separate service)
+    if (!this.backgroundModeServiceSkipShown) {
+      const bgOptNeeded = await this.batteryAlarmService.isBatteryOptimizationEnabled();
+      if (bgOptNeeded) {
+        const bgDecision = await this.showBackgroundModeAlert();
+        if (bgDecision === 'continue') {
+          this.backgroundModeService.disableBatteryOptimizations();
+        } else {
+          this.backgroundModeServiceSkipShown = true;
+        }
+      }
+    }
+
+    // Phase 3: Non-interactive initialization (channel, foreground service, boot)
+    await this.batteryAlarmService.initializeCore();
+  }
+
+  /**
+   * Show an explanatory alert before a system settings redirect.
+   * Returns 'continue' if the user wants to proceed, 'skip' for this session,
+   * or 'skipAlways' to never show this step again.
+   */
+  private async showPermissionAlert(step: PermissionStep): Promise<'continue' | 'skip' | 'skipAlways'> {
+    // Use plain text with \n line breaks (Ionic AlertController renders message as text, not HTML)
+    const fullMessage = step.message + '\n\nQUÉ HACER:\n' +
+      step.settingsScreenDescription;
+
+    return new Promise<'continue' | 'skip' | 'skipAlways'>((resolve) => {
+      const alert = this.alertController.create({
+        header: step.title,
+        message: fullMessage,
+        cssClass: 'permission-alert',
+        buttons: [
+          {
+            text: 'No mostrar de nuevo',
+            role: 'cancel',
+            cssClass: 'alert-button-cancel',
+            handler: () => {
+              resolve('skipAlways');
+            },
+          },
+          {
+            text: 'Omitir esta vez',
+            cssClass: 'alert-button-skip',
+            handler: () => {
+              resolve('skip');
+            },
+          },
+          {
+            text: 'Continuar',
+            cssClass: 'alert-button-confirm',
+            handler: () => {
+              resolve('continue');
+            },
+          },
+        ],
+      });
+
+      alert.then(a => a.present());
+    });
+  }
+
+  /**
+   * Show explanatory alert for BackgroundMode battery optimization.
+   * This is separate from BatteryAlarmService because it uses a
+   * different plugin (cordova-plugin-background-mode).
+   */
+  private async showBackgroundModeAlert(): Promise<'continue' | 'skip'> {
+    const alert = await this.alertController.create({
+      header: 'Optimización de Batería (Respaldo)',
+      message:
+        'Battery Control utiliza un sistema de monitoreo en segundo plano ' +
+        'como respaldo para dispositivos más antiguos. Para que funcione ' +
+        'correctamente, también necesita ser eximido de la optimización ' +
+        'de batería.\n\nQUÉ HACER:\n' +
+        'Se mostrará un diálogo del sistema. Toque "Permitir" para ' +
+        'eximir la app de la restricción de segundo plano.',
+      cssClass: 'permission-alert',
+      buttons: [
+        {
+          text: 'Omitir',
+          role: 'cancel',
+          cssClass: 'alert-button-cancel',
+        },
+        {
+          text: 'Permitir',
+          cssClass: 'alert-button-confirm',
+        },
+      ],
+    });
+
+    await alert.present();
+    const { role } = await alert.onDidDismiss();
+    return role === 'cancel' ? 'skip' : 'continue';
+  }
+
+  // -------------------------------------------------------------------------
   // Initialisation
   // -------------------------------------------------------------------------
 
@@ -138,43 +279,57 @@ export class BatteryPage implements OnInit, OnDestroy, ViewWillEnter {
 
   async setNotification(msj: string) {
     try {
-      await LocalNotifications.schedule({
-        notifications: [
-          {
-            title: 'Cuide su bateria',
-            body: msj,
-            id: 1,
-            extra: {
-              data: 'Pasa tu informacion para manejarla'
-            },
-          }
-        ]
-      });
+      // Use BatteryAlarmService for reliable delivery during Doze mode
+      await this.batteryAlarmService.scheduleBatteryAlarm(msj, 'low');
     } catch (err) {
       console.error('Error scheduling notification:', err);
+      // Fallback to basic LocalNotifications
+      try {
+        await LocalNotifications.schedule({
+          notifications: [
+            {
+              title: 'Cuide su bateria',
+              body: msj,
+              id: 1,
+              extra: {
+                data: 'Pasa tu informacion para manejarla'
+              },
+            }
+          ]
+        });
+      } catch (fallbackErr) {
+        console.error('Fallback notification also failed:', fallbackErr);
+      }
     }
   }
 
   async setNotificationAdvance(msj: string = 'Batería fuera de rango') {
     try {
-      await LocalNotifications.schedule({
-        notifications: [
-          {
-            title: 'Cuide su bateria',
-            body: msj,
-            id: 2,
-            actionTypeId: 'CHAT_MSG',
-            extra: {
-              data: 'Pasa tu informacion para manejarla'
-            },
-            attachments: [
-              { id: 'face', url: 'res://public/assets/imgs/notification.jpg' as any }
-            ]
-          }
-        ]
-      });
+      // Use BatteryAlarmService for reliable delivery during Doze mode
+      await this.batteryAlarmService.scheduleBatteryAlarm(msj, 'high');
     } catch (err) {
       console.error('Error scheduling advance notification:', err);
+      // Fallback to basic LocalNotifications
+      try {
+        await LocalNotifications.schedule({
+          notifications: [
+            {
+              title: 'Cuide su bateria',
+              body: msj,
+              id: 2,
+              actionTypeId: 'CHAT_MSG',
+              extra: {
+                data: 'Pasa tu informacion para manejarla'
+              },
+              attachments: [
+                { id: 'face', url: 'res://public/assets/imgs/notification.jpg' as any }
+              ]
+            }
+          ]
+        });
+      } catch (fallbackErr) {
+        console.error('Fallback advance notification also failed:', fallbackErr);
+      }
     }
   }
 
@@ -224,6 +379,8 @@ export class BatteryPage implements OnInit, OnDestroy, ViewWillEnter {
    * HTML5 audio playback is only possible in the foreground; if it fails
    * (e.g. the app is backgrounded) the LocalNotification will still be
    * delivered with the configured notification sound from capacitor.config.json.
+   *
+   * Uses BatteryAlarmService for Doze-resistant notification delivery.
    */
   playPlayer(msj?: string) {
     if (!this.activatedAlarm) { return; }
@@ -244,14 +401,14 @@ export class BatteryPage implements OnInit, OnDestroy, ViewWillEnter {
       // Audio element not available in this context
     }
 
-    // Vibración configurable
-    if ('vibrate' in navigator) {
-      navigator.vibrate(0);
-      navigator.vibrate(this.configHelper.getVibrationPattern());
-    }
+    // Vibración configurable (nativo via Capacitor plugin)
+    this.vibrationService.vibrate(this.configHelper.getVibrationPattern());
 
-    // LocalNotification fires even when the app is backgrounded
-    this.setNotification(msj ?? 'Batería fuera de rango');
+    // Use BatteryAlarmService for reliable notification delivery even during Doze
+    const message = msj ?? 'Batería fuera de rango';
+    this.batteryAlarmService.scheduleBatteryAlarm(message, 'low')
+      .catch(err => console.error('Error scheduling alarm via BatteryAlarmService:', err));
+
     this.changeDetectorRef.detectChanges();
   }
 
@@ -266,9 +423,7 @@ export class BatteryPage implements OnInit, OnDestroy, ViewWillEnter {
     } catch (e) {
       // Ignore errors when backgrounded
     }
-    if ('vibrate' in navigator) {
-      navigator.vibrate(0);
-    }
+    this.vibrationService.stopVibration();
     this.changeDetectorRef.detectChanges();
   }
 

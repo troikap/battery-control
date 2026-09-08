@@ -4,6 +4,10 @@
 		"classpath": "com.capacitorjs.plugins.device.DevicePlugin"
 	},
 	{
+		"pkg": "@capacitor/filesystem",
+		"classpath": "com.capacitorjs.plugins.filesystem.FilesystemPlugin"
+	},
+	{
 		"pkg": "@capacitor/local-notifications",
 		"classpath": "com.capacitorjs.plugins.localnotifications.LocalNotificationsPlugin"
 	},
@@ -16,7 +20,19 @@
 		"classpath": "com.capacitorjs.plugins.statusbar.StatusBarPlugin"
 	},
 	{
+		"pkg": "@capawesome-team/capacitor-android-battery-optimization",
+		"classpath": "io.capawesome.capacitorjs.plugins.batteryoptimization.BatteryOptimizationPlugin"
+	},
+	{
+		"pkg": "@capawesome-team/capacitor-android-foreground-service",
+		"classpath": "io.capawesome.capacitorjs.plugins.foregroundservice.ForegroundServicePlugin"
+	},
+	{
 		"pkg": "@capgo/capacitor-file-picker",
 		"classpath": "app.capgo.capacitor.filepicker.CapgoFilePickerPlugin"
+	},
+	{
+		"pkg": "@squareetlabs/capacitor-dont-kill-my-app",
+		"classpath": "com.squareetlabs.capacitor.dontkillmyapp.DontKillMyAppPlugin"
 	}
 ]

@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Preferences } from '@capacitor/preferences';
+import { Capacitor } from '@capacitor/core';
 import { VibrationPattern, VIBRATION_PATTERNS, DEFAULT_VIBRATION_PATTERN_ID } from '../models/vibration.model';
 import { SoundOption, ImportedSound } from '../models/sound.model';
 import { SoundImportService } from '../services/sound-import.service';
@@ -153,8 +154,8 @@ export class ConfigHelper {
    * Imported sounds come from `SoundImportService` and are mapped to
    * `SoundOption` with `isPreset: false` and `metadata` populated.
    *
-   * The combined list is compatible with the legacy `{id, value}` format
-   * because every entry includes both fields.
+   * For imported sounds on native platforms, the file path is converted
+   * to a WebView-accessible URL using `Capacitor.convertFileSrc()`.
    */
   public async getAllSounds(): Promise<SoundOption[]> {
     const presetSounds: SoundOption[] = this.sounds.map((s) => ({
@@ -170,7 +171,7 @@ export class ConfigHelper {
       .getImportedSounds()
       .map((imp: ImportedSound) => ({
         id: imp.id,
-        value: imp.localPath,
+        value: this.resolveImportedSoundUrl(imp),
         displayName: imp.displayName,
         isPreset: false,
         metadata: {
@@ -183,6 +184,36 @@ export class ConfigHelper {
       }));
 
     return [...presetSounds, ...importedSounds];
+  }
+
+  /**
+   * Resolve the playable URL for an imported sound.
+   *
+   * On native platforms (Android/iOS), files stored in the app's cache
+   * directory are not accessible via `http://localhost/` because Capacitor's
+   * local server only serves files from `www/`. We use `Capacitor.convertFileSrc()`
+   * to create a URL the WebView can load.
+   *
+   * For backward compatibility with older records that don't have `absolutePath`,
+   * we fall back to constructing the path from the cache directory.
+   */
+  private resolveImportedSoundUrl(imp: ImportedSound): string {
+    const platform = Capacitor.getPlatform();
+
+    // On web, use the relative path directly (served from www/)
+    if (platform === 'web') {
+      return imp.localPath;
+    }
+
+    // On native, convert the absolute path to a WebView-accessible URL
+    if (imp.absolutePath) {
+      return Capacitor.convertFileSrc(imp.absolutePath);
+    }
+
+    // Backward compatibility: older records may not have absolutePath.
+    // Try to construct a reasonable fallback using the relative path.
+    console.warn(`[ConfigHelper] Imported sound "${imp.fileName}" has no absolutePath, using relative path`);
+    return imp.localPath;
   }
 
   /**

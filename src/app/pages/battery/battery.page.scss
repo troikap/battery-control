@@ -104,3 +104,25 @@ ion-range {
 ion-spinner {
   color: var(--ion-color-primary);
 }
+
+/* Estilos para alertas de permisos - pre-line para saltos de línea con \n */
+.permission-alert .alert-message {
+  white-space: pre-line;
+  text-align: left;
+}
+
+/* Estilos para botones de alerta de permisos */
+.permission-alert .alert-button-cancel {
+  --background: var(--ion-color-medium);
+  --color: var(--ion-color-medium-contrast);
+}
+
+.permission-alert .alert-button-skip {
+  --background: var(--ion-color-warning);
+  --color: var(--ion-color-warning-contrast);
+}
+
+.permission-alert .alert-button-confirm {
+  --background: var(--ion-color-primary);
+  --color: var(--ion-color-primary-contrast);
+}

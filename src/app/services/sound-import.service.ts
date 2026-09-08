@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Preferences } from '@capacitor/preferences';
+import { Capacitor } from '@capacitor/core';
 import {
   ImportedSound,
   MAX_IMPORTED_SOUNDS,
@@ -9,11 +10,42 @@ import {
 } from '../models/sound.model';
 
 /**
+ * Interface for the native ContentCopy plugin.
+ */
+interface ContentCopyPlugin {
+  checkPermissions(): Promise<{ granted: boolean }>;
+  copyToCache(options: { uri: string; subdirectory?: string }): Promise<{
+    path: string;
+    absolutePath: string;
+    fileName: string;
+    size: number;
+  }>;
+}
+
+/**
+ * Get the native ContentCopy plugin instance.
+ */
+function getContentCopyPlugin(): ContentCopyPlugin | null {
+  try {
+    const w = window as any;
+    const capacitor = w.Capacitor;
+    if (capacitor?.Plugins?.ContentCopy) {
+      return capacitor.Plugins.ContentCopy as ContentCopyPlugin;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Service responsible for picking audio files from the device,
+ * copying them to the app's cache directory (so the WebView can play them),
  * validating them, persisting the metadata, and providing access
  * to the list of imported sounds.
  *
- * Uses `@capgo/capacitor-file-picker` for native file selection.
+ * Uses `@capgo/capacitor-file-picker` for native file selection
+ * and a native `ContentCopy` plugin to copy files from content:// URIs.
  */
 @Injectable({ providedIn: 'root' })
 export class SoundImportService {
@@ -47,6 +79,7 @@ export class SoundImportService {
 
   /**
    * Open the native file picker and let the user choose an audio file.
+   * The file is copied to the app's cache directory so the WebView can play it.
    *
    * Returns the newly created `ImportedSound` record, or `null` if the
    * user cancelled or the file was rejected.
@@ -58,6 +91,24 @@ export class SoundImportService {
     }
 
     try {
+      // On Android 13+ (API 33) the app needs READ_MEDIA_AUDIO to read from
+      // content:// URIs returned by the file picker.  Ask for the permission
+      // up-front so the user sees the dialog BEFORE selecting a file, not
+      // after (which would force them to re-select).
+      const nativePlugin = getContentCopyPlugin();
+      if (nativePlugin) {
+        try {
+          const perm = await nativePlugin.checkPermissions();
+          if (!perm.granted) {
+            console.warn('[SoundImportService] Storage permission denied');
+            return null;
+          }
+        } catch (err) {
+          // On web or if the plugin method is missing, continue without check
+          console.warn('[SoundImportService] Permission check skipped:', err);
+        }
+      }
+
       // Dynamic import — the plugin only exists on device/emulator.
       const { CapgoFilePicker } = await import('@capgo/capacitor-file-picker');
 
@@ -83,14 +134,26 @@ export class SoundImportService {
         return null;
       }
 
-      const filePath = file.path || file.name;
+      const sourceUri = file.path || file.name;
+
+      // --- Copy file to app cache directory ----------------------------------
+      console.log(`[SoundImportService] Copying file from: ${sourceUri}`);
+      const copyResult = await this.copyFileToCache(sourceUri, file.name);
+
+      if (!copyResult) {
+        console.error('[SoundImportService] Failed to copy file to cache');
+        return null;
+      }
+
+      console.log(`[SoundImportService] File copied to: ${copyResult.path}`);
 
       // --- Create record -----------------------------------------------------
       const imported: ImportedSound = {
         id: this.generateId(),
         fileName: file.name,
-        originalPath: filePath,
-        localPath: filePath,
+        originalPath: sourceUri,
+        localPath: copyResult.path,
+        absolutePath: copyResult.absolutePath,
         mimeType: file.mimeType || 'audio/mpeg',
         size: file.size || 0,
         importedAt: new Date().toISOString(),
@@ -120,6 +183,32 @@ export class SoundImportService {
   }
 
   /**
+   * Get the playable path for a sound. Returns a URL that the WebView can load,
+   * or null if the file is missing.
+   *
+   * On native platforms, uses Capacitor.convertFileSrc() to convert the
+   * absolute file path to a WebView-accessible URL.
+   */
+  async getPlayablePath(sound: ImportedSound): Promise<string | null> {
+    const platform = Capacitor.getPlatform();
+
+    if (platform === 'web') {
+      return sound.localPath;
+    }
+
+    // On native, use convertFileSrc with the absolute path
+    if (sound.absolutePath) {
+      return Capacitor.convertFileSrc(sound.absolutePath);
+    }
+
+    // Fallback for older records without absolutePath
+    if (sound.localPath.startsWith('file://')) {
+      return sound.localPath;
+    }
+    return sound.localPath;
+  }
+
+  /**
    * Remove an imported sound by its id.
    *
    * Returns `true` if the sound was found and removed, `false` otherwise.
@@ -129,6 +218,11 @@ export class SoundImportService {
     if (index === -1) {
       return false;
     }
+
+    const sound = this.importedSounds[index];
+
+    // Note: The cached file will be cleaned up by the OS when the cache is cleared.
+    // We don't need to explicitly delete it since it's in the cache directory.
 
     this.importedSounds.splice(index, 1);
     await this.saveToStorage();
@@ -148,6 +242,38 @@ export class SoundImportService {
    */
   getImportedCount(): number {
     return this.importedSounds.length;
+  }
+
+  // ---------------------------------------------------------------------------
+  // File copy logic
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Copy a file from a content:// URI (or file:// URI) to the app's cache
+   * directory using the native ContentCopy plugin.
+   *
+   * Returns an object with the relative and absolute paths, or null on failure.
+   */
+  private async copyFileToCache(sourceUri: string, fileName: string): Promise<{path: string; absolutePath: string} | null> {
+    try {
+      // Try native plugin first (works with content:// URIs)
+      const nativePlugin = getContentCopyPlugin();
+      if (nativePlugin) {
+        console.log(`[SoundImportService] Using native ContentCopy plugin`);
+        const result = await nativePlugin.copyToCache({
+          uri: sourceUri,
+          subdirectory: 'imported_sounds',
+        });
+        console.log(`[SoundImportService] Native copy success: ${result.path} (${result.size} bytes)`);
+        return { path: result.path, absolutePath: result.absolutePath };
+      }
+
+      console.warn('[SoundImportService] Native ContentCopy plugin not available');
+      return null;
+    } catch (err) {
+      console.error('[SoundImportService] Error copying file:', err);
+      return null;
+    }
   }
 
   // ---------------------------------------------------------------------------

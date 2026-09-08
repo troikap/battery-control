@@ -25,6 +25,8 @@ export interface ImportedSound {
   fileName: string;
   originalPath: string;
   localPath: string;
+  /** Absolute file path on device (optional for backward compatibility with older persisted records). */
+  absolutePath?: string;
   mimeType: string;
   size: number;
   importedAt: string;
